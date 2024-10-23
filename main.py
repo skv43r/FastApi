@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 import aiohttp
 import json
 import os
@@ -9,6 +11,9 @@ app = FastAPI()
 
 if not os.path.exists("public"):
     os.makedirs("public")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/public", StaticFiles(directory="public"), name="public")
 
 @app.get("/external-data")
 async def get_external_data():
@@ -39,6 +44,12 @@ async def get_external_data():
                 return data
         except Exception as e:
             return {"error": str(e)}
+
+@app.get("/", response_class=HTMLResponse)
+async def main_page():
+    async with aiofiles.open("static/index.html", "r") as file:
+        html_content = await file.read()
+    return HTMLResponse(content=html_content)
 
 # @app.get("/test")
 # def get_data():
