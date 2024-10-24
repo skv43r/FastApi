@@ -6,6 +6,7 @@ import json
 import os
 import aiofiles
 import requests
+import uvicorn
 
 app = FastAPI()
 
@@ -50,6 +51,9 @@ async def main_page():
     async with aiofiles.open("static/index.html", "r") as file:
         html_content = await file.read()
     return HTMLResponse(content=html_content)
+
+if  __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
 
 # @app.get("/test")
 # def get_data():
