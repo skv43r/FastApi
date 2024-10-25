@@ -10,11 +10,11 @@ import uvicorn
 
 app = FastAPI()
 
-if not os.path.exists("public"):
+if not os.path.exists("backend/public"):
     os.makedirs("public")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/public", StaticFiles(directory="public"), name="public")
+app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+app.mount("/public", StaticFiles(directory="backend/public"), name="public")
 
 @app.get("/external-data")
 async def get_external_data():
@@ -48,7 +48,7 @@ async def get_external_data():
 
 @app.get("/", response_class=HTMLResponse)
 async def main_page():
-    async with aiofiles.open("static/index.html", "r") as file:
+    async with aiofiles.open("backend/static/index.html", "r") as file:
         html_content = await file.read()
     return HTMLResponse(content=html_content)
 
