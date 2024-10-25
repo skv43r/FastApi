@@ -3,22 +3,29 @@
 <head>
     <title>Static Files</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
 </head>
 <body>
     <h1>Hello, Users!</h1>
     <div class="features-block">
         <div class="image">
             <span>
+                <p>{{ ids[0] }}</p>
                 <img src="/public/user_1.jpg" alt="John Doe">
-                <p>John Doe</p>
+                <p>{{ names[0] }}</p>
+                <p>{{ emails[0] }}</p>
             </span>
             <span>
+                <p>{{ ids[1] }}</p>
                 <img src="/public/user_2.jpg" alt="Jane Smith">
-                <p>Jane Smith</p>
+                <p>{{ names[1] }}</p>
+                <p>{{ emails[1] }}</p>
             </span>
             <span>
+                <p>{{ ids[2] }}</p>
                 <img src="/public/user_3.jpg" alt="Mark Johnson">
-                <p>Mark Johnson</p>
+                <p>{{ names[2] }}</p>
+                <p>{{ emails[2] }}</p>
             </span>
         </div>
     </div>
