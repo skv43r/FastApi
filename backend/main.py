@@ -6,6 +6,7 @@ import aiohttp
 import json
 import os
 import aiofiles
+import uvicorn
 
 app = FastAPI()
 
@@ -66,5 +67,5 @@ async def main_page(request: Request):
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}")
     
-# if  __name__ == "__main__":
-#     uvicorn.run(app, host="127.0.0.1", port=8000)
+if  __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
