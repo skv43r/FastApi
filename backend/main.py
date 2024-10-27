@@ -10,13 +10,13 @@ import uvicorn
 
 app = FastAPI()
 
-if not os.path.exists("backend/public"):
+if not os.path.exists("public"):
     os.makedirs("public")
 
-app.mount("/static", StaticFiles(directory="backend/static"), name="static")
-app.mount("/public", StaticFiles(directory="backend/public"), name="public")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/public", StaticFiles(directory="public"), name="public")
 
-templates = Jinja2Templates(directory="backend/static")
+templates = Jinja2Templates(directory="static")
 
 @app.get("/external-data")
 async def get_external_data():
@@ -24,7 +24,7 @@ async def get_external_data():
         try:
             async with session.get("https://api.npoint.io/88fcfcbf4fde970ba6f2") as response:
                 data = await response.json()
-                async with aiofiles.open ("backend/data.json", "w") as file:
+                async with aiofiles.open ("data.json", "w") as file:
                     await file.write(json.dumps(data, indent=4))
 
 
@@ -33,7 +33,7 @@ async def get_external_data():
                     user_id = user["id"]
 
                     file_name = f"user_{user_id}.jpg"
-                    file_path = os.path.join("backend/public", file_name)
+                    file_path = os.path.join("public", file_name)
 
                     async with session.get(avatar_url) as img_response:
                         if img_response.status == 200:
@@ -51,7 +51,7 @@ async def get_external_data():
 @app.get("/", response_class=HTMLResponse)
 async def main_page(request: Request):
     try:
-        async with aiofiles.open("backend/data.json", "r") as file:
+        async with aiofiles.open("data.json", "r") as file:
                 data = json.loads(await file.read())
                 ids = [user["id"] for user in data["users"]]
                 names = [user["name"] for user in data["users"]]
@@ -68,4 +68,4 @@ async def main_page(request: Request):
         return HTMLResponse(content=f"Error: {str(e)}")
     
 if  __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
