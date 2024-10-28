@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 import aiohttp
 import json
 import os
@@ -17,6 +18,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/public", StaticFiles(directory="public"), name="public")
 
 templates = Jinja2Templates(directory="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],    # Разрешен доступ с localhost:3000
+    allow_credentials=True,
+    allow_methods=["*"],    # Разрешены все HTTP методы (GET, POST и т.д.)
+    allow_headers=["*"],    # Разрешены все заголовки
+)
 
 @app.get("/external-data")
 async def get_external_data():
