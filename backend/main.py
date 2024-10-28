@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 import aiohttp
 import json
@@ -66,6 +66,10 @@ async def main_page(request: Request):
                 })
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}")
+    
+@app.get("/api")
+async def get_json_file():
+    return FileResponse("data.json", media_type="application/json", filename="data.json")
     
 if  __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
