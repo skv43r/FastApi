@@ -1,15 +1,27 @@
-from fastapi import FastAPI, Request
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import Session, select
 import aiohttp
 import json
 import os
 import aiofiles
 import uvicorn
+from typing import Annotated
+from models import User
+from database import create_db_and_tables, get_session
 
-app = FastAPI()
+SessionDep = Annotated[Session, Depends(get_session)]
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield 
+
+app = FastAPI(lifespan=lifespan)
 
 if not os.path.exists("public"):
     os.makedirs("public")
@@ -27,6 +39,35 @@ app.add_middleware(
     allow_headers=["*"],    # Разрешены все заголовки
 )
 
+
+@app.post("/users/")
+async def create_user(user: User,  session: SessionDep):
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+@app.get("/users/")
+async def read_users(session: SessionDep):
+    users = session.exec(select(User)).all()
+    return users
+
+@app.get("/users/{user_id}")
+async def read_user(user_id: int, session: SessionDep):
+    user = session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@app.delete(("/users/{user_id}"))
+async def delete_user(user_id: int, session: SessionDep):
+    user = session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    session.delete(user)
+    session.commit()
+    return {"ok": True}
+
 @app.get("/external-data")
 async def get_external_data():
     async with aiohttp.ClientSession() as session:
@@ -35,7 +76,6 @@ async def get_external_data():
                 data = await response.json()
                 async with aiofiles.open ("data.json", "w") as file:
                     await file.write(json.dumps(data, indent=4))
-
 
                 for user in data["users"]:
                     avatar_url = user["avatar"] 
@@ -52,26 +92,46 @@ async def get_external_data():
                         else:
                             return {"error": f"Failed to download image for user {user_id}"}
 
-
                 return data
         except Exception as e:
             return {"error": str(e)}
 
 @app.get("/", response_class=HTMLResponse)
-async def main_page(request: Request):
+async def main_page(request: Request, session: SessionDep):
     try:
         async with aiofiles.open("data.json", "r") as file:
                 data = json.loads(await file.read())
-                ids = [user["id"] for user in data["users"]]
-                names = [user["name"] for user in data["users"]]
-                emails = [user["email"] for user in data["users"]]
+                json_users = {user["id"]: user for user in data["users"]}
 
+                existing_users = session.exec(select(User)).all()
+                existing_user_ids = {user.id for user in existing_users}
+
+                for user_id, user_data in json_users.items():
+                    if user_id not in existing_user_ids:
+                        user = User(
+                            id=user_data["id"],
+                            name=user_data["name"],
+                            email=user_data["email"],
+                            avatar=user_data["avatar"]
+                        )
+                        session.add(user)
+                    else:
+                        existing_user = session.get(User, user_id)
+                        existing_user.name = user_data["name"]
+                        existing_user.email = user_data["email"]
+                        existing_user.avatar = user_data["avatar"]
+
+                for existing_user in existing_users:
+                    if existing_user.id not in json_users:
+                        session.delete(existing_user)
+
+                session.commit()
+
+                users = session.exec(select(User)).all()
                 
                 return templates.TemplateResponse("index.html", {
                     "request": request,
-                    "ids": ids,
-                    "names": names,
-                    "emails": emails
+                    "users": users
                 })
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}")
@@ -79,6 +139,7 @@ async def main_page(request: Request):
 @app.get("/api")
 async def get_json_file():
     return FileResponse("data.json", media_type="application/json", filename="data.json")
-    
+
+
 if  __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
