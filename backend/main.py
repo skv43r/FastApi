@@ -143,9 +143,9 @@ async def return_user(session: SessionDep):
     except Exception as e:
         return {"error": str(e)}
     
-@app.get("/api")
-async def get_json_file():
-    return FileResponse("data.json", media_type="application/json", filename="data.json")
+# @app.get("/api")
+# async def get_json_file():
+#     return FileResponse("data.json", media_type="application/json", filename="data.json")
 
 
 if  __name__ == "__main__":
