@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
@@ -39,35 +39,6 @@ app.add_middleware(
     allow_headers=["*"],    # Разрешены все заголовки
 )
 
-
-@app.post("/users/")
-async def create_user(user: User,  session: SessionDep):
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return user
-
-@app.get("/users/")
-async def read_users(session: SessionDep):
-    users = session.exec(select(User)).all()
-    return users
-
-@app.get("/users/{user_id}")
-async def read_user(user_id: int, session: SessionDep):
-    user = session.get(User, user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-@app.delete(("/users/{user_id}"))
-async def delete_user(user_id: int, session: SessionDep):
-    user = session.get(User, user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    session.delete(user)
-    session.commit()
-    return {"ok": True}
-
 @app.get("/external-data")
 async def get_external_data():
     async with aiohttp.ClientSession() as session:
@@ -96,45 +67,81 @@ async def get_external_data():
         except Exception as e:
             return {"error": str(e)}
 
-@app.get("/", response_class=HTMLResponse)
-async def main_page(request: Request, session: SessionDep):
-    try:
-        async with aiofiles.open("data.json", "r") as file:
-                data = json.loads(await file.read())
-                json_users = {user["id"]: user for user in data["users"]}
+@app.get("/import-users")
+async def import_users(session: SessionDep):
+    async with aiohttp.ClientSession() as session_json:
+        try:
+            async with session_json.get("https://api.npoint.io/88fcfcbf4fde970ba6f2") as response:
+                data = await response.json()
 
-                existing_users = session.exec(select(User)).all()
-                existing_user_ids = {user.id for user in existing_users}
+                for user in data["users"]:
+                    user_id = user["id"]
+                    avatar_url = user["avatar"]
+                    existing_user = session.get(User, user_id)
 
-                for user_id, user_data in json_users.items():
-                    if user_id not in existing_user_ids:
+                    if existing_user is None:
                         user = User(
-                            id=user_data["id"],
-                            name=user_data["name"],
-                            email=user_data["email"],
-                            avatar=user_data["avatar"]
+                            id=user_id,
+                            name=user["name"],
+                            email=user["email"],
+                            avatar=user["avatar"],
                         )
                         session.add(user)
                     else:
-                        existing_user = session.get(User, user_id)
-                        existing_user.name = user_data["name"]
-                        existing_user.email = user_data["email"]
-                        existing_user.avatar = user_data["avatar"]
+                        existing_user.name = user["name"]
+                        existing_user.email = user["email"]
+                        existing_user.avatar = user["avatar"]
+                    
+                    file_name = f"user_{user_id}.jpg"
+                    file_path = os.path.join("public", file_name)
 
-                for existing_user in existing_users:
-                    if existing_user.id not in json_users:
-                        session.delete(existing_user)
+                    async with session_json.get(avatar_url) as img_response:
+                        if img_response.status == 200:
+                            async with aiofiles.open(file_path, "wb") as image_file:
+                                content = await img_response.read()
+                                await image_file.write(content)
+                        else:
+                            return {"error": f"Failed to download image for user {user_id}"}
 
                 session.commit()
 
-                users = session.exec(select(User)).all()
-                
-                return templates.TemplateResponse("index.html", {
-                    "request": request,
-                    "users": users
-                })
+                return {"message": "Users imported successfully"}
+        except Exception as e:
+            return {"error": str(e)}
+
+@app.get("/users/")
+async def read_users(session: SessionDep):
+    users = session.exec(select(User)).all()
+    return users
+
+@app.get("/", response_class=HTMLResponse)
+async def main_page(request: Request, session: SessionDep):
+    try:
+        users = session.exec(select(User)).all()
+                     
+        return templates.TemplateResponse("index.html", {
+            "request": request,
+            "users": users
+        })
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}")
+
+@app.get("/return")
+async def return_user(session: SessionDep):
+    try:
+        users = session.exec(select(User)).all()
+        user_data = [
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "avatar": user.avatar
+            }
+            for user in users
+        ]
+        return {"users": user_data}
+    except Exception as e:
+        return {"error": str(e)}
     
 @app.get("/api")
 async def get_json_file():
