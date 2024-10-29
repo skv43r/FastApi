@@ -23,9 +23,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-if not os.path.exists("public"):
-    os.makedirs("public")
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/public", StaticFiles(directory="public"), name="public")
 
@@ -33,13 +30,13 @@ templates = Jinja2Templates(directory="static")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],    # Разрешен доступ с localhost:3000
+    allow_origins=["http://localhost"],    # Разрешен доступ с localhost:3000
     allow_credentials=True,
     allow_methods=["*"],    # Разрешены все HTTP методы (GET, POST и т.д.)
     allow_headers=["*"],    # Разрешены все заголовки
 )
 
-@app.get("/external-data")
+@app.get("/api/external-data")
 async def get_external_data():
     async with aiohttp.ClientSession() as session:
         try:
@@ -67,7 +64,7 @@ async def get_external_data():
         except Exception as e:
             return {"error": str(e)}
 
-@app.get("/import-users")
+@app.get("/api/import-users")
 async def import_users(session: SessionDep):
     async with aiohttp.ClientSession() as session_json:
         try:
@@ -109,12 +106,12 @@ async def import_users(session: SessionDep):
         except Exception as e:
             return {"error": str(e)}
 
-@app.get("/users/")
+@app.get("/api/users/")
 async def read_users(session: SessionDep):
     users = session.exec(select(User)).all()
     return users
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/api", response_class=HTMLResponse)
 async def main_page(request: Request, session: SessionDep):
     try:
         users = session.exec(select(User)).all()
@@ -126,7 +123,7 @@ async def main_page(request: Request, session: SessionDep):
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}")
 
-@app.get("/return")
+@app.get("/api/return")
 async def return_user(session: SessionDep):
     try:
         users = session.exec(select(User)).all()
@@ -142,10 +139,6 @@ async def return_user(session: SessionDep):
         return {"users": user_data}
     except Exception as e:
         return {"error": str(e)}
-    
-# @app.get("/api")
-# async def get_json_file():
-#     return FileResponse("data.json", media_type="application/json", filename="data.json")
 
 
 if  __name__ == "__main__":
