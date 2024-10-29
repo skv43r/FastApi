@@ -23,7 +23,7 @@ export default function Home() {
     const fetchUsers = async () => {
       try {
         // Делаем запрос к вашему endpoint
-        const response = await fetch('http://localhost:8000/api');
+        const response = await fetch('http://localhost:8000/return');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
