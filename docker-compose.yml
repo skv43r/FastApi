@@ -22,6 +22,10 @@ services:
       context: ./backend
     ports:
       - "8000:8000"
+    depends_on:
+       - postgres
+    environment:
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
     networks:
       - dev
 
@@ -33,3 +37,18 @@ services:
     networks:
       - dev
 
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: Users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Worldof123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dev
+
+volumes:
+  postgres_data:
