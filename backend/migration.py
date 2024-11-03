@@ -11,12 +11,14 @@ def migrate_data():
 
     with Session(postgres_engine) as pg_session:
         for user in users:
-            new_user = User(
-                name=user.name,
-                email=user.email,
-                avatar=user.avatar
-            )
-            pg_session.add(new_user)
+            existing_user = pg_session.exec(select(User).where(User.email == user.email)).first()
+            if not existing_user:
+                new_user = User(
+                    name=user.name,
+                    email=user.email,
+                    avatar=user.avatar
+                )
+                pg_session.add(new_user)
         pg_session.commit()
 
 def check_migrated_data():
