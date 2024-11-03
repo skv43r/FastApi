@@ -1,11 +1,9 @@
 from typing import Generator
 from sqlmodel import SQLModel, Session, create_engine
 
-sqlite_file_name = "users.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+DATABASE_URL = f"postgresql://postgres:Worldof123@postgres:5432/Users"
 
-connect_args = {"check_same_thread" : False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
+engine = create_engine(DATABASE_URL, echo=True)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
@@ -13,4 +11,3 @@ def create_db_and_tables():
 def get_session() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
-
