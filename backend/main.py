@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
@@ -110,6 +110,33 @@ async def import_users(session: SessionDep):
 async def read_users(session: SessionDep):
     users = session.exec(select(User)).all()
     return users
+
+@app.post("/api/add")
+async def  add_user(session: SessionDep, user: User):
+    try:
+        if not user.name or not user.email:
+            raise HTTPException(status_code=400, detail="Name and email are required")
+    
+        if user.id:
+            existing_user = session.get(User, user.id)
+            if existing_user:
+                raise HTTPException(status_code=400, detail="User with this ID already exists")
+
+        existing_email = session.exec(
+            select(User).where(User.email == user.email)
+        ).first()
+        if existing_email:
+            raise HTTPException(status_code=400, detail="User with this email already exists")
+        
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+
+        return {"message": "User  added successfully", "user": user}
+    except Exception as e:
+        session.rollback()  # Откат изменений в случае ошибки
+        print("Error occurred:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api", response_class=HTMLResponse)
 async def main_page(request: Request, session: SessionDep):
