@@ -1,14 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Pencil, Trash2 } from "lucide-react"
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 interface User {
   id: number
@@ -25,8 +27,10 @@ export function PageComponent() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [newUser, setNewUser] = useState({ name: '', email: '', avatar: '' })
+  const [editingUser, setEditingUser] = useState<User | null>(null)
 
   const fetchUsers = async () => {
     try {
@@ -47,14 +51,17 @@ export function PageComponent() {
     fetchUsers()
   }, [])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, isEditing: boolean = false) => {
     const { name, value } = e.target
-    setNewUser(prev => ({ ...prev, [name]: value }))
+    if (isEditing && editingUser) {
+      setEditingUser({ ...editingUser, [name]: value })
+    } else {
+      setNewUser(prev => ({ ...prev, [name]: value }))
+    }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log(newUser);
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault()
     try {
       const response = await fetch('http://localhost:8000/api/add', {
         method: 'POST',
@@ -66,11 +73,50 @@ export function PageComponent() {
       if (!response.ok) {
         throw new Error('Failed to add user')
       }
-      await fetchUsers() // Refresh the user list
-      setNewUser({ name: '', email: '', avatar: '' }) // Reset form
-      setIsDialogOpen(false) // Close the dialog
+      await fetchUsers()
+      setNewUser({ name: '', email: '', avatar: '' })
+      setIsAddDialogOpen(false)
+      toast.success('User added successfully')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add user')
+      toast.error(err instanceof Error ? err.message : 'Failed to add user')
+    }
+  }
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingUser) return
+    try {
+      const response = await fetch(`http://localhost:8000/api/edit/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editingUser),
+      })
+      if (!response.ok) {
+        throw new Error('Failed to update user')
+      }
+      await fetchUsers()
+      setIsEditDialogOpen(false)
+      toast.success('User updated successfully')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update user')
+    }
+  }
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm('Are you sure you want to delete this user?')) return
+    try {
+      const response = await fetch(`http://localhost:8000/api/delete/${userId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        throw new Error('Failed to delete user')
+      }
+      await fetchUsers()
+      toast.success('User deleted successfully')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete user')
     }
   }
 
@@ -93,7 +139,7 @@ export function PageComponent() {
     <main className="container mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Users</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="icon">
               <PlusCircle className="h-6 w-6" />
@@ -104,7 +150,7 @@ export function PageComponent() {
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleAddUser} className="space-y-4">
               <div>
                 <Label htmlFor="name">Name</Label>
                 <Input
@@ -166,9 +212,74 @@ export function PageComponent() {
                   <CardTitle className="mb-2">{user.name}</CardTitle>
                   <p className="text-sm text-muted-foreground">{user.email}</p>
                 </CardContent>
+                <CardFooter className="flex justify-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setEditingUser(user)
+                      setIsEditDialogOpen(true)
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit user</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleDeleteUser(user.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete user</span>
+                  </Button>
+                </CardFooter>
               </Card>
             ))}
       </div>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <form onSubmit={handleEditUser} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  value={editingUser.name}
+                  onChange={(e) => handleInputChange(e, true)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  name="email"
+                  type="email"
+                  value={editingUser.email}
+                  onChange={(e) => handleInputChange(e, true)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-avatar">Avatar URL</Label>
+                <Input
+                  id="edit-avatar"
+                  name="avatar"
+                  type="url"
+                  value={editingUser.avatar}
+                  onChange={(e) => handleInputChange(e, true)}
+                />
+              </div>
+              <Button type="submit">Update User</Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+      <ToastContainer position="bottom-right" />
     </main>
   )
 }
