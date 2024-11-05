@@ -134,9 +134,40 @@ async def  add_user(session: SessionDep, user: User):
 
         return {"message": "User  added successfully", "user": user}
     except Exception as e:
-        session.rollback()  # Откат изменений в случае ошибки
+        session.rollback()
         print("Error occurred:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.delete("/api/delete/{user_id}")
+async def delete_user(session: SessionDep, user_id: int):
+    try:
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User  not found")
+        session.delete(user)
+        session.commit()
+
+        return {"message": "User  deleted successfully"}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.put("/api/edit/{user_id}")
+async def edit_user(session: SessionDep, user_id: int, user_data: User):
+    try:
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User  not found")
+        user.name = user_data.name
+        user.email = user_data.email
+        user.avatar = user_data.avatar
+
+        session.commit()
+        return {"message": "User  updated successfully"}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api", response_class=HTMLResponse)
 async def main_page(request: Request, session: SessionDep):
