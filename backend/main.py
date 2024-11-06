@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlmodel import Session, select
 import aiohttp
 import json
@@ -11,10 +12,12 @@ import os
 import aiofiles
 import uvicorn
 from typing import Annotated
-from models import User
-from database import create_db_and_tables, get_session
+from models import User, AuthUser
+from database import create_db_and_tables, get_session, hash_password, create_access_token, verify_password, verify_access_token
+from datetime import datetime
 
 SessionDep = Annotated[Session, Depends(get_session)]
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -198,6 +201,66 @@ async def return_user(session: SessionDep):
     except Exception as e:
         return {"error": str(e)}
 
+@app.get("/protected-route")
+async def protected_route(token: str = Depends(oauth2_scheme)):
+    try:
+        # Проверяем токен
+        verify_access_token(token)
+        return {"message": "You have access to this protected route"}
+    except HTTPException as e:
+        raise e
+
+
+@app.post("/api/login")
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+                session: SessionDep):
+    try:
+        user = session.exec(
+            select(AuthUser).where(AuthUser.username == form_data.username)
+            ).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="Incorrect username or password")
+        
+        if not verify_password(form_data.password, user.password):
+            raise HTTPException(status_code=401, detail="Incorrect username or password")
+        
+        user.last_login = datetime.utcnow()
+        session.commit()
+        access_token = create_access_token(data={"sub": user.username})
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "username": user.username
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/register-email")
+async def register(data: AuthUser,
+                   session: SessionDep):
+    existing_user = session.exec(select(AuthUser).where(AuthUser.email == data.email)).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email is already registered")
+    
+    new_user = AuthUser(
+        username=data.username,
+        email=data.email,
+        password=hash_password(data.password)
+    )
+    session.add(new_user)
+
+    try:
+        session.commit()
+        session.refresh(new_user)
+        access_token = create_access_token(data={"sub": new_user.email})
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Error during registration: {str(e)}")
+    
+    return {"access_token": access_token,
+            "token_type": "bearer",
+            "username": new_user.username}
 
 if  __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
