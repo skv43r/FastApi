@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PlusCircle, Pencil, Trash2 } from "lucide-react"
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -23,6 +24,12 @@ interface ApiResponse {
   users: User[]
 }
 
+const isTokenExpired = (token: string): boolean => {
+  const decodedToken = JSON.parse(atob(token.split('.')[1])) // декодируем JWT
+  const currentTime = Date.now() / 1000 // текущее время в секундах
+  return decodedToken.exp < currentTime
+}
+
 export function PageComponent() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,6 +38,13 @@ export function PageComponent() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [newUser, setNewUser] = useState({ name: '', email: '', avatar: '' })
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [loginCredentials, setLoginCredentials] = useState({ username: '', password: '' })
+  const [registrationData, setRegistrationData] = useState({ username: '', telegramId: '' })
+  const [emailRegistrationData, setEmailRegistrationData] = useState({ username: '', email: '', password: '', confirmPassword: '' })
+  const [otpCode, setOtpCode] = useState('')
+  const [isOtpSent, setIsOtpSent] = useState(false)
+  const [registrationType, setRegistrationType] = useState<'telegram' | 'email'>('telegram')
 
   const fetchUsers = async () => {
     try {
@@ -48,8 +62,18 @@ export function PageComponent() {
   }
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    const token = localStorage.getItem('access_token');
+    if (!token || isTokenExpired(token)) {
+      setIsLoggedIn(false);
+    } else {
+      setIsLoggedIn(true);
+      fetchUsers();
+    }
+  }, [isLoggedIn]);
+  //   if (isLoggedIn) {
+  //     fetchUsers()
+  //   }
+  // }, [isLoggedIn])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, isEditing: boolean = false) => {
     const { name, value } = e.target
@@ -58,6 +82,125 @@ export function PageComponent() {
     } else {
       setNewUser(prev => ({ ...prev, [name]: value }))
     }
+  }
+
+  const handleLoginInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setLoginCredentials(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleRegistrationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setRegistrationData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleEmailRegistrationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setEmailRegistrationData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const formData = new URLSearchParams()
+      formData.append('username', loginCredentials.username)
+      formData.append('password', loginCredentials.password)
+      const response = await fetch('http://localhost:8000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      })
+      if (!response.ok) {
+        throw new Error('Login failed')
+      }
+      const data = await response.json();
+      localStorage.setItem('access_token', data.access_token);
+      setIsLoggedIn(true)
+      toast.success('Logged in successfully')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Login failed')
+    }
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      let response;
+      if (registrationType === 'telegram') {
+        response = await fetch('http://localhost:8000/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(registrationData),
+        })
+      } else {
+        if (emailRegistrationData.password !== emailRegistrationData.confirmPassword) {
+          throw new Error('Passwords do not match')
+        }
+        response = await fetch('http://localhost:8000/api/register-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: emailRegistrationData.username,
+            email: emailRegistrationData.email,
+            password: emailRegistrationData.password,
+          }),
+        })
+      }
+      if (!response.ok) {
+        throw new Error('Registration failed')
+      }
+      
+      if (registrationType === 'telegram') {
+        setIsOtpSent(true)
+        toast.success('OTP sent to your Telegram. Please check and enter the code.')
+      } else {
+        const data = await response.json(); // Получаем данные из ответа сервера
+        if (data.access_token) {
+          localStorage.setItem('access_token', data.access_token); // Сохраняем токен в localStorage
+          toast.success('Registration successful. You are now logged in.');
+          // Перенаправление или обновление состояния для входа
+          setIsLoggedIn(true) // Переход на нужную страницу
+          fetchUsers()
+        } else {
+          throw new Error('Token not received');
+        }
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Registration failed')
+    }
+  }
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('http://localhost:8000/api/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...registrationData, otp: otpCode }),
+      })
+      if (!response.ok) {
+        throw new Error('OTP verification failed')
+      }
+      setIsLoggedIn(true)
+      toast.success('Registration successful. You are now logged in.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'OTP verification failed')
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    setIsLoggedIn(false)
+    setUsers([])
+    toast.info('Logged out successfully')
   }
 
   const handleAddUser = async (e: React.FormEvent) => {
@@ -135,57 +278,203 @@ export function PageComponent() {
     )
   }
 
+  if (!isLoggedIn) {
+    return (
+      <main className="container mx-auto p-8">
+        <Card className="w-[400px] mx-auto">
+          <CardHeader>
+            <CardTitle>Welcome</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="login">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      name="username"
+                      value={loginCredentials.username}
+                      onChange={handleLoginInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      value={loginCredentials.password}
+                      onChange={handleLoginInputChange}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">Login</Button>
+                </form>
+              </TabsContent>
+              <TabsContent value="register">
+                <Tabs value={registrationType} onValueChange={(value) => setRegistrationType(value as 'telegram' | 'email')}>
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="telegram">Telegram</TabsTrigger>
+                    <TabsTrigger value="email">Email</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="telegram">
+                    {!isOtpSent ? (
+                      <form onSubmit={handleRegister} className="space-y-4">
+                        <div>
+                          <Label htmlFor="reg-username">Username</Label>
+                          <Input
+                            id="reg-username"
+                            name="username"
+                            value={registrationData.username}
+                            onChange={handleRegistrationInputChange}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="telegram-id">Telegram ID</Label>
+                          <Input
+                            id="telegram-id"
+                            name="telegramId"
+                            value={registrationData.telegramId}
+                            onChange={handleRegistrationInputChange}
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="w-full">Register with Telegram</Button>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleVerifyOtp} className="space-y-4">
+                        <div>
+                          <Label htmlFor="otp">Enter OTP from Telegram</Label>
+                          <Input
+                            id="otp"
+                            name="otp"
+                            value={otpCode}
+                            onChange={(e) => setOtpCode(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="w-full">Verify OTP</Button>
+                      </form>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="email">
+                    <form onSubmit={handleRegister} className="space-y-4">
+                      <div>
+                        <Label htmlFor="reg-username">Username</Label>
+                        <Input
+                          id="reg-username"
+                          name="username"
+                          value={emailRegistrationData.username}
+                          onChange={handleEmailRegistrationInputChange}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-email">Email</Label>
+                        <Input
+                          id="reg-email"
+                          name="email"
+                          type="email"
+                          value={emailRegistrationData.email}
+                          onChange={handleEmailRegistrationInputChange}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-password">Password</Label>
+                        <Input
+                          id="reg-password"
+                          name="password"
+                          type="password"
+                          value={emailRegistrationData.password}
+                          onChange={handleEmailRegistrationInputChange}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-confirm-password">Confirm Password</Label>
+                        <Input
+                          id="reg-confirm-password"
+                          name="confirmPassword"
+                          type="password"
+                          value={emailRegistrationData.confirmPassword}
+                          onChange={handleEmailRegistrationInputChange}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">Register with Email</Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </main>
+    )
+  }
+
   return (
     <main className="container mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Users</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="icon">
-              <PlusCircle className="h-6 w-6" />
-              <span className="sr-only">Add new user</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddUser} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={newUser.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={newUser.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="avatar">Avatar URL</Label>
-                <Input
-                  id="avatar"
-                  name="avatar"
-                  type="url"
-                  value={newUser.avatar}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <Button type="submit">Add User</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="space-x-2">
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon">
+                <PlusCircle className="h-6 w-6" />
+                <span className="sr-only">Add new user</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New User</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddUser} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={newUser.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={newUser.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="avatar">Avatar URL</Label>
+                  <Input
+                    id="avatar"
+                    name="avatar"
+                    type="url"
+                    value={newUser.avatar}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <Button type="submit">Add User</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={handleLogout}>Logout</Button>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading
