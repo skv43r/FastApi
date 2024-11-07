@@ -3,8 +3,7 @@ from sqlmodel import SQLModel, Session, create_engine
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jwt import ExpiredSignatureError, DecodeError
-from fastapi import HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException
 import jwt
 
 DATABASE_URL = f"postgresql://postgres:Worldof123@postgres:5432/Users"
@@ -27,7 +26,7 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_access_token(data: dict, expires_delta: timedelta = timedelta(seconds=10)):
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=1)):
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
