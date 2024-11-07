@@ -134,8 +134,13 @@ export function PageComponent() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(registrationData),
+          body: JSON.stringify({
+            username: registrationData.username,
+            telegram_id: parseInt(registrationData.telegramId)
+          }),
         })
+        const data = await response.json();
+        console.log('OTP sent successfully:', data);
       } else {
         if (emailRegistrationData.password !== emailRegistrationData.confirmPassword) {
           throw new Error('Passwords do not match')
