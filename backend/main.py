@@ -12,9 +12,11 @@ import os
 import aiofiles
 import uvicorn
 from typing import Annotated
-from models import User, AuthUser
+from models import User, AuthUser, TelegramOTP
 from database import create_db_and_tables, get_session, hash_password, create_access_token, verify_password, verify_access_token
 from datetime import datetime
+from bot import send_otp, start_bot
+import asyncio
 
 SessionDep = Annotated[Session, Depends(get_session)]
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -22,7 +24,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
+    bot_task = asyncio.create_task(start_bot())
     yield 
+    bot_task.cancel()
+    try:
+        await bot_task
+    except asyncio.CancelledError:
+        pass
 
 app = FastAPI(lifespan=lifespan)
 
@@ -261,6 +269,21 @@ async def register(data: AuthUser,
     return {"access_token": access_token,
             "token_type": "bearer",
             "username": new_user.username}
+
+@app.post("/api/register")
+async def register(data: TelegramOTP):
+    telegram_id = data.telegram_id
+    print(f"Attempting to send OTP to telegram_id: {telegram_id}")
+    try:
+        telegram_id = int(data.telegram_id)
+        otp = await send_otp(telegram_id)
+        print(f"Generated OTP: {otp}")
+        if not otp:
+                raise HTTPException(status_code=500, detail="Failed to send OTP")
+        
+        return {"message": "OTP sent successfully", "otp": otp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if  __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
