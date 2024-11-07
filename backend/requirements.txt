@@ -57,3 +57,6 @@ websockets==13.1
 yarl==1.16.0
 passlib==1.7.4
 pyjwt==2.9.0
+aiogram==3.14.0
+magic-filter==1.0.12
+pyotp==2.9.0
