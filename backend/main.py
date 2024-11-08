@@ -271,19 +271,54 @@ async def register(data: AuthUser,
             "username": new_user.username}
 
 @app.post("/api/register")
-async def register(data: TelegramOTP):
+async def register(data: TelegramOTP, session: SessionDep):
     telegram_id = data.telegram_id
-    print(f"Attempting to send OTP to telegram_id: {telegram_id}")
     try:
         telegram_id = int(data.telegram_id)
         otp = await send_otp(telegram_id)
-        print(f"Generated OTP: {otp}")
         if not otp:
                 raise HTTPException(status_code=500, detail="Failed to send OTP")
+        
+        user_otp = session.exec(select(TelegramOTP).where(TelegramOTP.telegram_id == telegram_id)).first()
+
+        if user_otp:
+            user_otp.otp = otp
+        else:
+            user_otp = TelegramOTP(username=data.username, telegram_id=telegram_id, otp=otp)
+            session.add(user_otp)
+        
+        session.commit()
         
         return {"message": "OTP sent successfully", "otp": otp}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/api/verify-otp")
+async def verify_otp(data: TelegramOTP, session: SessionDep):
+    telegram_id = data.telegram_id
+    otp = data.otp
+
+    print(f"Received telegram_id: {telegram_id}, otp: {otp}")
+
+    if not telegram_id or not otp:
+        raise HTTPException(status_code=400, detail="Telegram ID and OTP are required")
+    
+    user_otp = session.exec(select(TelegramOTP).where(TelegramOTP.telegram_id == telegram_id)).first()
+    if not user_otp:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user_otp.otp == data.otp:
+        access_token = create_access_token(data={"sub": user_otp.telegram_id})
+        user_otp.otp = None
+        session.commit()
+
+        return {
+            "message": "OTP verified successfully",
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+    else:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
 
 if  __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
