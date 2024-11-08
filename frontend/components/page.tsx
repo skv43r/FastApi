@@ -140,7 +140,7 @@ export function PageComponent() {
           }),
         })
         const data = await response.json();
-        console.log('OTP sent successfully:', data);
+        setRegistrationData(prev => ({ ...prev, telegram_id: data.telegram_id }));
       } else {
         if (emailRegistrationData.password !== emailRegistrationData.confirmPassword) {
           throw new Error('Passwords do not match')
@@ -163,7 +163,7 @@ export function PageComponent() {
       
       if (registrationType === 'telegram') {
         setIsOtpSent(true)
-        toast.success('OTP sent to your Telegram. Please check and enter the code.')
+        // toast.success('OTP sent to your Telegram. Please check and enter the code.')
       } else {
         const data = await response.json(); // Получаем данные из ответа сервера
         if (data.access_token) {
@@ -189,13 +189,20 @@ export function PageComponent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...registrationData, otp: otpCode }),
+        body: JSON.stringify({ telegram_id: registrationData.telegramId, otp: otpCode }),
       })
       if (!response.ok) {
         throw new Error('OTP verification failed')
       }
-      setIsLoggedIn(true)
-      toast.success('Registration successful. You are now logged in.')
+      const data = await response.json(); 
+      if (data.access_token) {
+        localStorage.setItem('access_token', data.access_token); 
+        toast.success('Registration successful. You are now logged in.');
+        setIsLoggedIn(true) 
+        fetchUsers()
+      } else {
+        throw new Error('Token not received');
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'OTP verification failed')
     }
