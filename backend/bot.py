@@ -7,12 +7,10 @@ import asyncio
 
 bot = Bot(token="7844671961:AAHhE0Uuz4u7Ge00as21A4AqG-TFotrRWcQ")
 dp = Dispatcher(storage=MemoryStorage())
-otp_codes = {}
 
 async def send_otp(user_id: int):
     try:
         otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-        otp_codes[user_id] = otp
         await bot.send_message(user_id, otp)
         return otp
     except Exception as e:
