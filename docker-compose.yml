@@ -28,6 +28,8 @@ services:
       - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
     networks:
       - dev
+    volumes:
+      - ./backend:/app
 
   frontend:
     build: 
@@ -49,6 +51,20 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - dev
+
+  admin:
+    build: 
+      context: ./admin
+    ports:
+      - "5000:5000"
+    depends_on:
+       - postgres
+       - backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+    networks:
+      - dev
+
 
 volumes:
   postgres_data:
