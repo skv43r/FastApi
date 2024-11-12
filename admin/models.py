@@ -1,8 +1,12 @@
-from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
 
+Base = declarative_base()
 
-class User(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    email: str = Field(index=True, unique=True)
-    avatar: str | None = Field(default=None)
+class User(Base):
+    __tablename__ = 'user'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    email = Column(String, unique=True, index=True)
+    avatar = Column(String, nullable=True)
