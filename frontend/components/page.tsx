@@ -48,7 +48,7 @@ export function PageComponent() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/return')
+      const response = await fetch('http://localhost:8002/api/return')
       if (!response.ok) {
         throw new Error('Failed to fetch data')
       }
@@ -105,7 +105,7 @@ export function PageComponent() {
       const formData = new URLSearchParams()
       formData.append('username', loginCredentials.username)
       formData.append('password', loginCredentials.password)
-      const response = await fetch('http://localhost:8000/api/login', {
+      const response = await fetch('http://localhost:8001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -129,7 +129,7 @@ export function PageComponent() {
     try {
       let response;
       if (registrationType === 'telegram') {
-        response = await fetch('http://localhost:8000/api/register', {
+        response = await fetch('http://localhost:8001/api/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ export function PageComponent() {
         if (emailRegistrationData.password !== emailRegistrationData.confirmPassword) {
           throw new Error('Passwords do not match')
         }
-        response = await fetch('http://localhost:8000/api/register-email', {
+        response = await fetch('http://localhost:8001/api/auth/register-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -184,7 +184,7 @@ export function PageComponent() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8000/api/verify-otp', {
+      const response = await fetch('http://localhost:8001/api/auth/verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -218,7 +218,7 @@ export function PageComponent() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8000/api/add', {
+      const response = await fetch('http://localhost:8002/api/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +241,7 @@ export function PageComponent() {
     e.preventDefault()
     if (!editingUser) return
     try {
-      const response = await fetch(`http://localhost:8000/api/edit/${editingUser.id}`, {
+      const response = await fetch(`http://localhost:8002/api/edit/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -262,7 +262,7 @@ export function PageComponent() {
   const handleDeleteUser = async (userId: number) => {
     if (!confirm('Are you sure you want to delete this user?')) return
     try {
-      const response = await fetch(`http://localhost:8000/api/delete/${userId}`, {
+      const response = await fetch(`http://localhost:8002/api/delete/${userId}`, {
         method: 'DELETE',
       })
       if (!response.ok) {
