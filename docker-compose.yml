@@ -12,8 +12,21 @@ services:
       - './backend/public:/public'
       - './backend/static:/static'
     depends_on:
+      - auth_backend
       - backend
       - frontend
+    networks:
+      - dev
+
+  auth_backend:
+    build:
+      context: ./auth_backend
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./auth_backend/app:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/authusers
     networks:
       - dev
 
@@ -21,7 +34,7 @@ services:
     build: 
       context: ./backend
     ports:
-      - "8000:8000"
+      - "8002:8000"
     depends_on:
        - postgres
     environment:
