@@ -12,6 +12,7 @@ services:
       - './backend/public:/public'
       - './backend/static:/static'
     depends_on:
+      - cms_backend
       - auth_backend
       - backend
       - frontend
@@ -27,6 +28,18 @@ services:
       - ./auth_backend/app:/app
     environment:
       - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/authusers
+    networks:
+      - dev
+
+  cms_backend:
+    build:
+      context: ./cms_backend
+    ports:
+      - "8003:8000"
+    volumes:
+      - ./cms_backend/app:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/cms
     networks:
       - dev
 
@@ -74,10 +87,11 @@ services:
        - postgres
        - backend
     environment:
-      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/cms
     networks:
       - dev
 
 
 volumes:
   postgres_data:
+  postgres_cms_data:
