@@ -48,7 +48,7 @@ export function PageComponent() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:8003/api/cms/users')
+      const response = await fetch('http://localhost:8002/api/return')
       if (!response.ok) {
         throw new Error('Failed to fetch data')
       }
