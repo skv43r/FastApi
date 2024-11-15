@@ -82,40 +82,9 @@ async def import_users(session: SessionDep):
         except Exception as e:
             return {"error": str(e)}
 
-# @router.get("/api/cms/users/")
-# async def read_users(session: SessionDep):
-#     users = session.exec(select(User)).all()
-#     return users
-
-@router.get("/api/cms/return")
-async def return_user(session: SessionDep):
-    try:
-        users = session.exec(select(User)).all()
-        user_data = [
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "avatar": user.avatar
-            }
-            for user in users
-        ]
-        return {"users": user_data}
-    except Exception as e:
-        return {"error": str(e)}
-    
-@router.post("/api/cms/user-added")
-async def user_added(user: User, session: SessionDep):
-    try:
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-        return {"message": "User  processed in CMS", "user": user}
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/api/cms/users")
-async def get_users(session: SessionDep):
+@router.get("/api/cms/users/")
+async def read_users(session: SessionDep):
     users = session.exec(select(User)).all()
-    return {"users": users}
+    return users
+
+    
