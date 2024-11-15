@@ -1,0 +1,22 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "avatar": "https://img.freepik.com/free-photo/3d-illustration-teenager-with-funny-face-glasses_1142-50955.jpg?t=st=1729596910~exp=1729600510~hmac=aaa57d870ac93d7d718c64add55507373f2d580ca5e03ea0e00b95c745b92554&w=1060"
+        },
+        {
+            "id": 2,
+            "name": "Jane Smith",
+            "email": "jane.smith@example.com",
+            "avatar": "https://img.freepik.com/free-photo/3d-cartoon-style-character_23-2151034097.jpg?t=st=1729596973~exp=1729600573~hmac=59bb2b7cd85e1e9ded3fa07648c40271c843b8758eebfcad44c89bcd130be981&w=1060"
+        },
+        {
+            "id": 3,
+            "name": "Mark Johnson",
+            "email": "mark.johnson@example.com",
+            "avatar": "https://img.freepik.com/free-photo/3d-illustration-cartoon-character-business-suit-glasses_1142-40377.jpg?t=st=1729597032~exp=1729600632~hmac=06a0e58f4218bd450e499dfe68ab07db7cb40ff8a76c2730afbf6bd4f23e2a29&w=1060"
+        }
+    ]
+}
