@@ -1,9 +1,10 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    db_user: str
-    db_password : str
-    db_host: str
-    db_name: str
+    DATABASE_URL: str = "postgresql://postgres:Worldof123@postgres:5432/Users"
+    ECHO_SQL: bool = True
 
-    model_config = SettingsConfigDict(env_file = ".env")
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
