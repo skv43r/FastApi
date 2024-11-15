@@ -9,8 +9,7 @@ services:
       - "80:80"
     volumes:
       - './nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf'
-      - './backend/public:/public'
-      - './backend/static:/static'
+      - './cms_backend/app/public:/public'
     depends_on:
       - cms_backend
       - auth_backend
@@ -39,7 +38,7 @@ services:
     volumes:
       - ./cms_backend/app:/app
     environment:
-      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/cms
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
     networks:
       - dev
 
@@ -87,11 +86,10 @@ services:
        - postgres
        - backend
     environment:
-      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/cms
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
     networks:
       - dev
 
 
 volumes:
   postgres_data:
-  postgres_cms_data:
