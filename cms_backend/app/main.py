@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from database import create_db_and_tables
+from database import db
 from routes import router as cms_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    db.create_db_and_tables()
     yield  
 
 app = FastAPI(lifespan=lifespan)
