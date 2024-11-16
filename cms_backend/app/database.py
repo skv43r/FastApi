@@ -1,12 +1,16 @@
 from typing import Generator
 from sqlmodel import SQLModel, Session, create_engine
+from config import settings
 
-DATABASE_URL = f"postgresql://postgres:Worldof123@postgres:5432/Users"
-engine = create_engine(DATABASE_URL, echo=True)
+class Database:
+    def __init__(self, database_url: str, echo: bool = False):
+        self.engine = create_engine(database_url, echo=echo)
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+    def create_db_and_tables(self):
+        SQLModel.metadata.create_all(self.engine)
 
-def get_session() -> Generator[Session, None, None]:
-    with Session(engine) as session:
-        yield session
+    def get_session(self) -> Generator[Session, None, None]:
+        with Session(self.engine) as session:
+            yield session
+
+db = Database(database_url=settings.DATABASE_URL, echo=settings.ECHO_SQL)
