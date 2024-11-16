@@ -1,85 +1,47 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 from sqlmodel import Session, select
-from database import get_session
+from database import db
 from models import User
-import aiohttp
-import aiofiles
-import json
-import os
+from services.data_service import DataService
+from services.user_service import UserService
 
-SessionDep = Annotated[Session, Depends(get_session)]
-
+SessionDep = Annotated[Session, Depends(db.get_session)]
+API_URL = "https://api.npoint.io/88fcfcbf4fde970ba6f2"
 router = APIRouter()
+
 
 @router.get("/api/cms/external-data")
 async def get_external_data():
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get("https://api.npoint.io/88fcfcbf4fde970ba6f2") as response:
-                data = await response.json()
-                async with aiofiles.open ("data.json", "w") as file:
-                    await file.write(json.dumps(data, indent=4))
+    data_service = DataService(API_URL)
+    try:
+        data = await data_service.fetch_data()
+        await data_service.save_json(data)
 
-                for user in data["users"]:
-                    avatar_url = user["avatar"] 
-                    user_id = user["id"]
+        for user in data["users"]:
+            file_name = f"user_{user['id']}.jpg"
+            await data_service.download_image(user["avatar"], file_name)
 
-                    file_name = f"user_{user_id}.jpg"
-                    file_path = os.path.join("public", file_name)
-
-                    async with session.get(avatar_url) as img_response:
-                        if img_response.status == 200:
-                            async with aiofiles.open(file_path, "wb") as image_file:
-                                content = await img_response.read()
-                                await image_file.write(content)
-                        else:
-                            return {"error": f"Failed to download image for user {user_id}"}
-
-                return data
-        except Exception as e:
-            return {"error": str(e)}
+        return {"message": "Data fetched and images saved"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+            
 
 @router.get("/api/cms/import-users")
 async def import_users(session: SessionDep):
-    async with aiohttp.ClientSession() as session_json:
-        try:
-            async with session_json.get("https://api.npoint.io/88fcfcbf4fde970ba6f2") as response:
-                data = await response.json()
+    data_service = DataService(API_URL)
+    user_service = UserService(session)
+    try:
+        data = await data_service.fetch_data()
 
-                for user in data["users"]:
-                    user_id = user["id"]
-                    avatar_url = user["avatar"]
-                    existing_user = session.get(User, user_id)
+        for user_data in data["users"]:
+            user_service.import_user(user_data)
+            file_name = f"user_{user_data['id']}.jpg"
+            await data_service.download_image(user_data["avatar"], file_name)
+        session.commit()
 
-                    if existing_user is None:
-                        user = User(
-                            id=user_id,
-                            name=user["name"],
-                            email=user["email"],
-                            avatar=user["avatar"],
-                        )
-                        session.add(user)
-                    else:
-                        existing_user.name = user["name"]
-                        existing_user.email = user["email"]
-                        existing_user.avatar = user["avatar"]
-                    
-                    file_name = f"user_{user_id}.jpg"
-                    file_path = os.path.join("public", file_name)
-
-                    async with session_json.get(avatar_url) as img_response:
-                        if img_response.status == 200:
-                            async with aiofiles.open(file_path, "wb") as image_file:
-                                content = await img_response.read()
-                                await image_file.write(content)
-                        else:
-                            return {"error": f"Failed to download image for user {user_id}"}
-
-                session.commit()
-
-                return {"message": "Users imported successfully"}
-        except Exception as e:
+        return {"message": "Users imported successfully"}
+    except Exception as e:
             return {"error": str(e)}
 
 @router.get("/api/cms/users/")
