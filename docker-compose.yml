@@ -20,11 +20,11 @@ services:
 
   auth_backend:
     build:
-      context: ./auth_backend
+      context: ./auth/auth_backend
     ports:
       - "8001:8000"
     volumes:
-      - ./auth_backend/app:/app
+      - ./auth/auth_backend/app:/app
     environment:
       - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/authusers
     networks:
@@ -44,7 +44,7 @@ services:
 
   backend:
     build: 
-      context: ./backend
+      context: ./application/backend
     ports:
       - "8002:8000"
     depends_on:
@@ -54,13 +54,21 @@ services:
     networks:
       - dev
     volumes:
-      - ./backend:/app
+      - ./application/backend:/app
 
   frontend:
     build: 
-      context: ./frontend
+      context: ./application/frontend
     ports:
-      - "3000:3000"
+      - "3001:3000"
+    networks:
+      - dev
+
+  auth_frontend:
+    build: 
+      context: ./auth/auth_frontend
+    ports:
+      - "3002:3000"
     networks:
       - dev
 
@@ -87,6 +95,15 @@ services:
        - backend
     environment:
       - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+    networks:
+      - dev
+
+  rabbitmq:
+    image: rabbitmq:latest
+    hostname: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
     networks:
       - dev
 
