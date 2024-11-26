@@ -1,0 +1,55 @@
+networks:
+  main:
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - './nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf'
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - main
+
+  backend:
+    build: 
+      context: ./backend
+    ports:
+      - "8002:8000"
+    depends_on:
+       - postgres
+    environment:
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+    networks:
+      - main
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build: 
+      context: ./frontend
+    ports:
+      - "3001:3000"
+    networks:
+      - main
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: Users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Worldof123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - main
+
+
+volumes:
+  postgres_data:
