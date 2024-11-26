@@ -53,7 +53,7 @@ export function BlockPage() {
       const data = await response.json();
       localStorage.setItem('access_token', data.access_token);
       toast.success('Logged in successfully')
-      router.push('/dashboard')
+      router.push('http://localhost/')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Login failed')
     }
@@ -103,7 +103,7 @@ export function BlockPage() {
         if (data.access_token) {
           localStorage.setItem('access_token', data.access_token);
           toast.success('Registration successful. You are now logged in.');
-          router.push('/dashboard')
+          router.push('http://localhost/')
         } else {
           throw new Error('Token not received');
         }
@@ -130,7 +130,7 @@ export function BlockPage() {
       if (data.access_token) {
         localStorage.setItem('access_token', data.access_token); 
         toast.success('Registration successful. You are now logged in.');
-        router.push('/dashboard')
+        router.push('http://localhost/')
       } else {
         throw new Error('Token not received');
       }
