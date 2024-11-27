@@ -1,6 +1,6 @@
 'use client';
 
-import { BlockPage } from "@/components/app-page";
+import { BlockPage } from "@/components/app-booking-page";
 
 
 export default function Home() {
