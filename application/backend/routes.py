@@ -1,12 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
-from sqlalchemy import extract
 from database import db
 from models import User
 from user_controller import UserController
 from typing import Annotated
-from models import Service, Trainer, TimeSlot
-from datetime import datetime
+from models import Service, Trainer, TimeSlot, Booking
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
 router = APIRouter()
@@ -52,3 +50,13 @@ async def return_timeslots_endpoint(session: SessionDep, service_id: int, traine
     ).all()
     return timeslots
 
+@router.post("/api/bookings")
+async def post_booking_data_endpoint(session: SessionDep, booking_data: dict):
+    new_booking = Booking(
+        service=booking_data["serviceId"],
+        master=booking_data["trainerId"],
+        dates=booking_data["date"],
+        time=booking_data["timeSlotId"]
+    )
+    session.add(new_booking)
+    session.commit()
