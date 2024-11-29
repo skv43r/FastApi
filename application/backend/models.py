@@ -42,11 +42,10 @@ class GroupServices(SQLModel, table=True):
 
 class Booking(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(index=True)
-    service: str = Field(nullable=False)
-    master: str = Field(nullable=False)
-    date: str = Field(nullable=False)
-    time: str = Field(nullable=False)
+    service: int = Field(nullable=False)
+    master: int = Field(nullable=False)
+    dates: str = Field(nullable=False)
+    time: int = Field(nullable=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Service(SQLModel, table=True):
