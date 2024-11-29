@@ -31,12 +31,12 @@ interface TimeSlot {
   id: number
   trainer_id: number
   service_id: number
-  dates: string        // UTC datetime string
-  times: string       // Time string in HH:mm:ss format
+  dates: string
+  times: string
   available: boolean
-  created_at: string  // UTC datetime string
-  trainer?: Trainer   // Optional related trainer data
-  service?: Service   // Optional related service data
+  created_at: string
+  trainer?: Trainer
+  service?: Service
 }
 
 type BookingStep = 'serviceType' | 'category' | 'service' | 'trainer' | 'datetime' | 'confirmation'
@@ -67,7 +67,6 @@ export function BlockPage() {
       const response = await fetch('http://localhost:8002/api/services')
       if (!response.ok) throw new Error('Failed to fetch services')
       const data = await response.json()
-      console.log('Fetched services:', data) // Debug log
       setServices(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch services')
@@ -105,7 +104,6 @@ export function BlockPage() {
   }
 
   const handleServiceTypeSelect = (type: 'individual' | 'group') => {
-    console.log('Selected service type:', type) // Debug log
     setSelectedServiceType(type)
     if (type === 'individual') {
       setCurrentStep('category')
@@ -115,7 +113,6 @@ export function BlockPage() {
   }
 
   const handleCategorySelect = (category: string) => {
-    console.log('Selected category:', category) // Debug log
     setSelectedCategory(category)
     setCurrentStep('service')
   }
@@ -145,7 +142,6 @@ export function BlockPage() {
 
   const handleConfirmBooking = async () => {
     try {
-      setLoading(true)
       const response = await fetch('http://localhost:8002/api/bookings', {
         method: 'POST',
         headers: {
