@@ -525,29 +525,14 @@ end_date = datetime(2024, 12, 7)
 
 def insert_data():
     with next(db.get_session()) as session:
-        # for specialist in individual_specialists_data:
-        #     individual_specialist_entry = IndividualSpecialists(**specialist)
-        #     session.add(individual_specialist_entry)
 
-        # for service in group_services_data:
-        #     group_service_entry = Service(**service)
-        #     session.add(group_service_entry)
+        for service in group_services_data:
+            group_service_entry = Service(**service)
+            session.add(group_service_entry)
             
-        # for trainer in trainers_data:
-        #     triner_entry = Trainer(**trainer)
-        #     session.add(triner_entry)
-            
-        # for massage in massage_data:
-        #     massage_entry = Massage(**massage)
-        #     session.add(massage_entry)
-
-        # for specialist in group_specialists_data:
-        #     group_specialist_entry = GroupSpecialists(**specialist)
-        #     session.add(group_specialist_entry)
-
-        # for service in group_services_data:
-        #     group_service_entry = GroupServices(**service)
-        #     session.add(group_service_entry)
+        for trainer in trainers_data:
+            triner_entry = Trainer(**trainer)
+            session.add(triner_entry)
 
         trainers = session.exec(select(Trainer)).all()
         services = session.exec(select(Service)).all()
