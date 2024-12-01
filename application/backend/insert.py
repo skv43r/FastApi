@@ -1,4 +1,4 @@
-from models import Service, Trainer, TimeSlot
+from models import Service, Trainer, TimeSlot, Branch
 from database import db
 from sqlmodel import Session, select
 from typing import Annotated
@@ -523,38 +523,60 @@ time_slots = [time(hour, minute) for hour in range(9, 21) for minute in (0, 30)]
 start_date = datetime(2024, 12, 1)
 end_date = datetime(2024, 12, 7)
 
+branch_data = [
+    {
+        "name": "Йога Хом",
+        "address": "улица Северная, 528а",
+        "phone": "+7 929 827-40-24",
+        "workingHours": "пн.-вс.: 9:00-21:00",
+        "description": """
+Студия йоги в центре Краснодара - Йога Хом
+
+Попробуйте захватывающие занятия йогой в гамаках, улучшите гибкость и силу с Аштанга йогой, насладитесь мягкими практиками Soft йоги или восстановите здоровье спины с помощью Йогатерапии позвоночника. Присоединяйтесь к нам и найдите свой путь к внутреннему равновесию и благополучию
+
+Возраст и уровень подготовки не важен, мы ждём всех, до встречи на ковриках!
+        """,
+        "photos": ["https://assets.yclients.com/general/1/1f/1f2cc8ec4a5827f_20240514033840.png", "https://assets.yclients.com/general/f/f7/f7095ee9343ea35_20240517002851.png", "https://assets.yclients.com/general/b/ba/ba57cda5a3abd3b_20240517002933.png", "https://assets.yclients.com/general/5/51/516bd1f88a1a3a1_20240517003010.png"]
+
+    }
+]
+
 def insert_data():
     with next(db.get_session()) as session:
 
-        for service in group_services_data:
-            group_service_entry = Service(**service)
-            session.add(group_service_entry)
+        # for service in group_services_data:
+        #     group_service_entry = Service(**service)
+        #     session.add(group_service_entry)
             
-        for trainer in trainers_data:
-            triner_entry = Trainer(**trainer)
-            session.add(triner_entry)
+        # for trainer in trainers_data:
+        #     triner_entry = Trainer(**trainer)
+        #     session.add(triner_entry)
 
-        trainers = session.exec(select(Trainer)).all()
-        services = session.exec(select(Service)).all()
+        # trainers = session.exec(select(Trainer)).all()
+        # services = session.exec(select(Service)).all()
 
-        for trainer in trainers:
-            for service in services:
-                current_date = start_date
-                while current_date <= end_date:
-                    for slot_time in time_slots:
-                        full_datetime = datetime.combine(current_date.date(), slot_time)
+        # for trainer in trainers:
+        #     for service in services:
+        #         current_date = start_date
+        #         while current_date <= end_date:
+        #             for slot_time in time_slots:
+        #                 full_datetime = datetime.combine(current_date.date(), slot_time)
 
-                        time_slot = TimeSlot(
-                            trainer_id=trainer.id,
-                            service_id=service.id,
-                            dates=current_date.date(),
-                            times=full_datetime.time(),
-                            available=True,
-                            created_at=datetime.utcnow()
-                        )
-                        session.add(time_slot)
+        #                 time_slot = TimeSlot(
+        #                     trainer_id=trainer.id,
+        #                     service_id=service.id,
+        #                     dates=current_date.date(),
+        #                     times=full_datetime.time(),
+        #                     available=True,
+        #                     created_at=datetime.utcnow()
+        #                 )
+        #                 session.add(time_slot)
 
-                    current_date += timedelta(days=1)
+        #             current_date += timedelta(days=1)
+
+        for data in branch_data:
+            branch_entry = Branch(**data)
+            session.add(branch_entry)
 
         session.commit()
 
