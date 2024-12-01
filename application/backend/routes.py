@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import Session, select
 from database import db
 from models import User
 from user_controller import UserController
 from typing import Annotated
-from models import Service, Trainer, TimeSlot, Booking
+from models import Service, Trainer, TimeSlot, Booking, Branch
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
 router = APIRouter()
@@ -45,18 +45,39 @@ async def return_timeslots_endpoint(session: SessionDep, service_id: int, traine
         select(TimeSlot).where(
             TimeSlot.trainer_id == trainer_id,
             TimeSlot.dates == date,
-            TimeSlot.service_id == service_id
+            TimeSlot.service_id == service_id,
+            TimeSlot.available == True
         )
     ).all()
     return timeslots
 
 @router.post("/api/bookings")
 async def post_booking_data_endpoint(session: SessionDep, booking_data: dict):
+    timeslot = session.exec(select(TimeSlot).where(
+        TimeSlot.id == booking_data["timeSlotId"],
+        TimeSlot.dates == booking_data["date"],
+        TimeSlot.service_id == booking_data["serviceId"]
+    )).first()
+
+    if not timeslot:
+        raise HTTPException(status_code=400, detail="Выбранное время уже занято")
+    
+    timeslot.available = False
+    
     new_booking = Booking(
         service=booking_data["serviceId"],
         master=booking_data["trainerId"],
         dates=booking_data["date"],
         time=booking_data["timeSlotId"]
     )
+
     session.add(new_booking)
     session.commit()
+    
+    return {"message": "Бронирование успешно создано", "booking_id": new_booking.id}
+    
+
+@router.get("/api/branch-info")
+async def get_about_info(session: SessionDep):
+    branch = session.exec(select(Branch)).all()
+    return branch
