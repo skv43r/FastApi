@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional
+from typing import Optional, List
 from datetime import date, time, datetime
+import sqlalchemy as sa
 
 class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -80,3 +81,12 @@ class TimeSlot(SQLModel, table=True):
 
     trainer: Optional["Trainer"] = Relationship(back_populates="time_slots")
     service: Optional["Service"] = Relationship(back_populates="time_slots")
+
+class Branch(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(nullable=False)
+    address: str = Field(nullable=False)
+    phone: str = Field(nullable=False)
+    workingHours: str = Field(nullable=False)
+    description: str  = Field(nullable=False)
+    photos: List[str] = Field(default=[], sa_column=sa.Column(sa.JSON))
