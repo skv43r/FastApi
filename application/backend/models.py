@@ -49,6 +49,10 @@ class Booking(SQLModel, table=True):
     time: int = Field(nullable=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class TrainerService(SQLModel, table=True):
+    trainer_id: int = Field(foreign_key="trainer.id", primary_key=True)
+    service_id: int = Field(foreign_key="service.id", primary_key=True)
+
 class Service(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
@@ -60,6 +64,8 @@ class Service(SQLModel, table=True):
     type: str = Field(index=True)
 
     time_slots: list["TimeSlot"] = Relationship(back_populates="service")
+    trainers: list["Trainer"] = Relationship(back_populates="services", link_model=TrainerService)
+
 
 class Trainer(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -69,6 +75,7 @@ class Trainer(SQLModel, table=True):
     photo: str | None = Field(default=None)
 
     time_slots: list["TimeSlot"] = Relationship(back_populates="trainer")
+    services: list["Service"] = Relationship(back_populates="trainers", link_model=TrainerService)
 
 class TimeSlot(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
