@@ -1,9 +1,10 @@
-from models import Service, Trainer, TimeSlot, Branch
+from models import Service, Trainer, TimeSlot, Branch, TrainerService
 from database import db
 from sqlmodel import Session, select
 from typing import Annotated
 from fastapi import Depends
 from datetime import datetime, timedelta, time
+import random
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
 
@@ -574,11 +575,61 @@ def insert_data():
 
         #             current_date += timedelta(days=1)
 
-        for data in branch_data:
-            branch_entry = Branch(**data)
-            session.add(branch_entry)
+        # for data in branch_data:
+        #     branch_entry = Branch(**data)
+        #     session.add(branch_entry)
+
+        services = session.exec(select(Service)).all()
+
+        for service in services:
+            if service.type.lower() == "massage":
+                trainer_service_entry = TrainerService(trainer_id=1, service_id=service.id)
+                session.add(trainer_service_entry)
+            else:
+                random_trainer = random.randint(2, 8)
+                trainer_service_entry = TrainerService(trainer_id=random_trainer, service_id=service.id)
+                session.add(trainer_service_entry)
 
         session.commit()
+
+        trainer_service_pairs = session.exec(select(TrainerService)).all()
+
+        for pair in trainer_service_pairs:
+            trainer_id = pair.trainer_id
+            service_id = pair.service_id
+            service = session.get(Service, service_id)
+
+            current_date = start_date
+            while current_date <= end_date:
+                for slot_time in time_slots:
+                    full_datetime = datetime.combine(current_date.date(), slot_time)
+
+                    if service.type.lower() == "massage" and trainer_id == 1 and time(10, 0) <= slot_time <= time(12, 0):
+                        time_slot = TimeSlot(
+                            trainer_id=trainer_id,
+                            service_id=service_id,
+                            dates=current_date.date(),
+                            times=full_datetime.time(),
+                            available=True,
+                            created_at=datetime.utcnow()
+                        )
+                        session.add(time_slot)
+
+                    elif service.type.lower() != "massage" and time(13, 0) <= slot_time <= time(14, 0):
+                        time_slot = TimeSlot(
+                            trainer_id=trainer_id,
+                            service_id=service_id,
+                            dates=current_date.date(),
+                            times=full_datetime.time(),
+                            available=True,
+                            created_at=datetime.utcnow()
+                        )
+                        session.add(time_slot)
+
+                current_date += timedelta(days=1)
+
+        session.commit()
+            
 
 if __name__ == "__main__":
     insert_data()
