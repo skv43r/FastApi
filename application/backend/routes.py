@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import Session, select
+from datetime import datetime
 from database import db
 from models import User
 from user_controller import UserController
 from typing import Annotated
 from models import Service, Trainer, TimeSlot, Booking, Branch
+
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
 router = APIRouter()
@@ -35,8 +37,19 @@ async def return_services_endpoint(session: SessionDep):
     return services
 
 @router.get("/api/trainers")
-async def return_trainers_endpoint(session: SessionDep):
-    trainers = session.exec(select(Trainer)).all()
+async def return_trainers_endpoint(session: SessionDep, service_id: int = Query(..., alias="serviceId")):
+    today = datetime.now().date()
+    query = (
+        select(Trainer)
+        .join(Trainer.time_slots)
+        .where(
+            TimeSlot.service_id == service_id,
+            TimeSlot.dates >= today,
+            TimeSlot.available == True
+        )
+        .distinct()
+    )
+    trainers = session.exec(query).all()
     return trainers
 
 @router.get("/api/timeslots")
@@ -56,7 +69,8 @@ async def post_booking_data_endpoint(session: SessionDep, booking_data: dict):
     timeslot = session.exec(select(TimeSlot).where(
         TimeSlot.id == booking_data["timeSlotId"],
         TimeSlot.dates == booking_data["date"],
-        TimeSlot.service_id == booking_data["serviceId"]
+        TimeSlot.service_id == booking_data["serviceId"],
+        TimeSlot.available == True
     )).first()
 
     if not timeslot:
