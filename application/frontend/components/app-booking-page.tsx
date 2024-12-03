@@ -165,7 +165,7 @@ export function BlockPage() {
         }),
       })
       if (!response.ok) throw new Error('Booking failed')
-      router.push('/booking-success')
+      router.push('/success')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while confirming the booking')
     } finally {
@@ -174,7 +174,7 @@ export function BlockPage() {
   }
 
   const handleBranchInfoClick = () => {
-    router.push('/branch-info')
+    router.push('/info')
   }
 
   const toggleDescription = (serviceId: number) => {
