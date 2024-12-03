@@ -80,7 +80,8 @@ class Trainer(SQLModel, table=True):
 class TimeSlot(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     trainer_id: int = Field(foreign_key="trainer.id", nullable=False)
-    service_id: int = Field(foreign_key="service.id", nullable=False)
+    service_id: Optional[int] = Field(default=None, foreign_key="service.id")
+    group_class_id: Optional[int] = Field(default=None, foreign_key="groupclass.id")
     dates: date = Field(nullable=False)
     times: time = Field(nullable=False)
     available: bool = Field(default=True)
@@ -88,6 +89,7 @@ class TimeSlot(SQLModel, table=True):
 
     trainer: Optional["Trainer"] = Relationship(back_populates="time_slots")
     service: Optional["Service"] = Relationship(back_populates="time_slots")
+    group_class: Optional["GroupClass"] = Relationship(back_populates="time_slots")
 
 class Branch(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -97,3 +99,13 @@ class Branch(SQLModel, table=True):
     workingHours: str = Field(nullable=False)
     description: str  = Field(nullable=False)
     photos: List[str] = Field(default=[], sa_column=sa.Column(sa.JSON))
+
+class GroupClass(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(nullable=False)
+    duration: float | None = Field(default=None)
+    description: str | None = Field(default=None)
+    price: int | None = Field(default=None, index=True)
+    available_spots: int = Field(default=0)
+
+    time_slots: list["TimeSlot"] = Relationship(back_populates="group_class")
