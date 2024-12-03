@@ -1,4 +1,4 @@
-from models import Service, Trainer, TimeSlot, Branch, TrainerService
+from models import Service, Trainer, TimeSlot, Branch, TrainerService, GroupClass
 from database import db
 from sqlmodel import Session, select
 from typing import Annotated
@@ -258,9 +258,7 @@ group_services_data = [
 * медитативный подход в практике дает снятие стресса и гармонизацию психологического состояния, улучшается качество сна
         """,
         "price": 900,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "Йога-терапия позвоночника",
@@ -275,9 +273,7 @@ group_services_data = [
 Практика подходит для тех, кто только начинает знакомиться йогой, имеет ограничения подвижности в позвоночнике и другие заболевания опорно-двигательного аппарата.
         """,
         "price": 900,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "Йога для беременных",
@@ -297,9 +293,7 @@ group_services_data = [
 6. Улучшение кровообращения и общего здоровья.
         """,
         "price": 900,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "Детская аэро-йога",
@@ -317,9 +311,7 @@ group_services_data = [
 ?Занятия позволяют детям расслабиться, избавиться от избытка энергии и чрезмерной напряжённости в теле, балансируют тело.
         """,
         "price": 700,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "Хатха-йога для детей",
@@ -344,9 +336,7 @@ group_services_data = [
 Практика подходит для детей и подростков от 7 до 16 лет.
         """,
         "price": 700,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "Хатха-йога для начинающих",
@@ -360,9 +350,7 @@ group_services_data = [
 * восстановят нервную систему, помогая справляться с переживаниями и стрессом.
         """,
         "price": 900,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "Утренняя хатха для начинающих",
@@ -376,9 +364,7 @@ group_services_data = [
 * восстановят нервную систему, помогая справляться с переживаниями и стрессом.
         """,
         "price": 900,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "FLY Йога в гамаках",
@@ -392,9 +378,7 @@ Fly yoga — это не просто йога в гамаке, она совм�
 Приятный бонус — тренировки на гамаке помогают справиться с тревожностью и «перезагрузить» головной мозг, улучшить работу вестибулярного аппарата.
         """,
         "price": 899,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     },
     {
         "name": "Медитация с поющими чашами. Открытый урок.",
@@ -421,9 +405,7 @@ Fly yoga — это не просто йога в гамаке, она совм�
 
 ?✨После практики почувствуете перезагрузку всей вашей системы , улучшение физического и психического здоровья, освободитесь от эмоциональных блоков, услышите свой внутренний голос, уйдете домой с новыми прекрасными мыслями ?
         """,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "meditation"
+        "available_spots": 15
     },
     {
         "name": "Аэро-йога",
@@ -439,9 +421,7 @@ Fly yoga — это не просто йога в гамаке, она совм�
 - улучшение работы сердечно-сосудистой и дыхательных систем.
         """,
         "price": 900,
-        "photo": "https://assets.yclients.com/main_service_image/basic/1/1e/1e03e791c644959_20240831085047.png",
-        "category": "group",
-        "type": "yoga"
+        "available_spots": 10
     }
 ]
 
@@ -545,9 +525,9 @@ branch_data = [
 def insert_data():
     with next(db.get_session()) as session:
 
-        # for service in group_services_data:
-        #     group_service_entry = Service(**service)
-        #     session.add(group_service_entry)
+        for service in group_services_data:
+            group_service_entry = GroupClass(**service)
+            session.add(group_service_entry)
             
         # for trainer in trainers_data:
         #     triner_entry = Trainer(**trainer)
@@ -579,54 +559,54 @@ def insert_data():
         #     branch_entry = Branch(**data)
         #     session.add(branch_entry)
 
-        services = session.exec(select(Service)).all()
+        # services = session.exec(select(Service)).all()
 
-        for service in services:
-            if service.type.lower() == "massage":
-                trainer_service_entry = TrainerService(trainer_id=1, service_id=service.id)
-                session.add(trainer_service_entry)
-            else:
-                random_trainer = random.randint(2, 8)
-                trainer_service_entry = TrainerService(trainer_id=random_trainer, service_id=service.id)
-                session.add(trainer_service_entry)
+        # for service in services:
+        #     if service.type.lower() == "massage":
+        #         trainer_service_entry = TrainerService(trainer_id=1, service_id=service.id)
+        #         session.add(trainer_service_entry)
+        #     else:
+        #         random_trainer = random.randint(2, 8)
+        #         trainer_service_entry = TrainerService(trainer_id=random_trainer, service_id=service.id)
+        #         session.add(trainer_service_entry)
 
-        session.commit()
+        # session.commit()
 
-        trainer_service_pairs = session.exec(select(TrainerService)).all()
+        # trainer_service_pairs = session.exec(select(TrainerService)).all()
 
-        for pair in trainer_service_pairs:
-            trainer_id = pair.trainer_id
-            service_id = pair.service_id
-            service = session.get(Service, service_id)
+        # for pair in trainer_service_pairs:
+        #     trainer_id = pair.trainer_id
+        #     service_id = pair.service_id
+        #     service = session.get(Service, service_id)
 
-            current_date = start_date
-            while current_date <= end_date:
-                for slot_time in time_slots:
-                    full_datetime = datetime.combine(current_date.date(), slot_time)
+        #     current_date = start_date
+        #     while current_date <= end_date:
+        #         for slot_time in time_slots:
+        #             full_datetime = datetime.combine(current_date.date(), slot_time)
 
-                    if service.type.lower() == "massage" and trainer_id == 1 and time(10, 0) <= slot_time <= time(12, 0):
-                        time_slot = TimeSlot(
-                            trainer_id=trainer_id,
-                            service_id=service_id,
-                            dates=current_date.date(),
-                            times=full_datetime.time(),
-                            available=True,
-                            created_at=datetime.utcnow()
-                        )
-                        session.add(time_slot)
+        #             if service.type.lower() == "massage" and trainer_id == 1 and time(10, 0) <= slot_time <= time(12, 0):
+        #                 time_slot = TimeSlot(
+        #                     trainer_id=trainer_id,
+        #                     service_id=service_id,
+        #                     dates=current_date.date(),
+        #                     times=full_datetime.time(),
+        #                     available=True,
+        #                     created_at=datetime.utcnow()
+        #                 )
+        #                 session.add(time_slot)
 
-                    elif service.type.lower() != "massage" and time(13, 0) <= slot_time <= time(14, 0):
-                        time_slot = TimeSlot(
-                            trainer_id=trainer_id,
-                            service_id=service_id,
-                            dates=current_date.date(),
-                            times=full_datetime.time(),
-                            available=True,
-                            created_at=datetime.utcnow()
-                        )
-                        session.add(time_slot)
+        #             elif service.type.lower() != "massage" and time(13, 0) <= slot_time <= time(14, 0):
+        #                 time_slot = TimeSlot(
+        #                     trainer_id=trainer_id,
+        #                     service_id=service_id,
+        #                     dates=current_date.date(),
+        #                     times=full_datetime.time(),
+        #                     available=True,
+        #                     created_at=datetime.utcnow()
+        #                 )
+        #                 session.add(time_slot)
 
-                current_date += timedelta(days=1)
+        #         current_date += timedelta(days=1)
 
         session.commit()
             
