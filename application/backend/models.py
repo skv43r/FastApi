@@ -53,6 +53,10 @@ class TrainerService(SQLModel, table=True):
     trainer_id: int = Field(foreign_key="trainer.id", primary_key=True)
     service_id: int = Field(foreign_key="service.id", primary_key=True)
 
+class TrainerGroup(SQLModel, table=True):
+    trainer_id: int = Field(foreign_key="trainer.id", primary_key=True)
+    group_class_id: int = Field(foreign_key="groupclass.id", primary_key=True)
+
 class Service(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
@@ -66,7 +70,6 @@ class Service(SQLModel, table=True):
     time_slots: list["TimeSlot"] = Relationship(back_populates="service")
     trainers: list["Trainer"] = Relationship(back_populates="services", link_model=TrainerService)
 
-
 class Trainer(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
@@ -76,6 +79,7 @@ class Trainer(SQLModel, table=True):
 
     time_slots: list["TimeSlot"] = Relationship(back_populates="trainer")
     services: list["Service"] = Relationship(back_populates="trainers", link_model=TrainerService)
+    groups: list["GroupClass"] = Relationship(back_populates="trainers", link_model=TrainerGroup)
 
 class TimeSlot(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -107,5 +111,7 @@ class GroupClass(SQLModel, table=True):
     description: str | None = Field(default=None)
     price: int | None = Field(default=None, index=True)
     available_spots: int = Field(default=0)
+    trainer_id: int | None = Field(default=None, foreign_key="trainer.id")
 
+    trainers: list["Trainer"] = Relationship(back_populates="groups", link_model=TrainerGroup)
     time_slots: list["TimeSlot"] = Relationship(back_populates="group_class")
