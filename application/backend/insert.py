@@ -1,4 +1,4 @@
-from models import Service, Trainer, TimeSlot, Branch, TrainerService, GroupClass
+from models import Service, Trainer, TimeSlot, Branch, TrainerService, GroupClass, TrainerGroup
 from database import db
 from sqlmodel import Session, select
 from typing import Annotated
@@ -258,7 +258,8 @@ group_services_data = [
 * медитативный подход в практике дает снятие стресса и гармонизацию психологического состояния, улучшается качество сна
         """,
         "price": 900,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 7
     },
     {
         "name": "Йога-терапия позвоночника",
@@ -273,7 +274,8 @@ group_services_data = [
 Практика подходит для тех, кто только начинает знакомиться йогой, имеет ограничения подвижности в позвоночнике и другие заболевания опорно-двигательного аппарата.
         """,
         "price": 900,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 8
     },
     {
         "name": "Йога для беременных",
@@ -293,7 +295,8 @@ group_services_data = [
 6. Улучшение кровообращения и общего здоровья.
         """,
         "price": 900,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 6
     },
     {
         "name": "Детская аэро-йога",
@@ -311,7 +314,8 @@ group_services_data = [
 ?Занятия позволяют детям расслабиться, избавиться от избытка энергии и чрезмерной напряжённости в теле, балансируют тело.
         """,
         "price": 700,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 7
     },
     {
         "name": "Хатха-йога для детей",
@@ -336,7 +340,8 @@ group_services_data = [
 Практика подходит для детей и подростков от 7 до 16 лет.
         """,
         "price": 700,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 2
     },
     {
         "name": "Хатха-йога для начинающих",
@@ -350,7 +355,8 @@ group_services_data = [
 * восстановят нервную систему, помогая справляться с переживаниями и стрессом.
         """,
         "price": 900,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 1
     },
     {
         "name": "Утренняя хатха для начинающих",
@@ -364,7 +370,8 @@ group_services_data = [
 * восстановят нервную систему, помогая справляться с переживаниями и стрессом.
         """,
         "price": 900,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 5
     },
     {
         "name": "FLY Йога в гамаках",
@@ -378,7 +385,8 @@ Fly yoga — это не просто йога в гамаке, она совм�
 Приятный бонус — тренировки на гамаке помогают справиться с тревожностью и «перезагрузить» головной мозг, улучшить работу вестибулярного аппарата.
         """,
         "price": 899,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 4
     },
     {
         "name": "Медитация с поющими чашами. Открытый урок.",
@@ -405,7 +413,8 @@ Fly yoga — это не просто йога в гамаке, она совм�
 
 ?✨После практики почувствуете перезагрузку всей вашей системы , улучшение физического и психического здоровья, освободитесь от эмоциональных блоков, услышите свой внутренний голос, уйдете домой с новыми прекрасными мыслями ?
         """,
-        "available_spots": 15
+        "available_spots": 15,
+        "trainer_id": 1
     },
     {
         "name": "Аэро-йога",
@@ -421,7 +430,8 @@ Fly yoga — это не просто йога в гамаке, она совм�
 - улучшение работы сердечно-сосудистой и дыхательных систем.
         """,
         "price": 900,
-        "available_spots": 10
+        "available_spots": 10,
+        "trainer_id": 5
     }
 ]
 
@@ -525,9 +535,9 @@ branch_data = [
 def insert_data():
     with next(db.get_session()) as session:
 
-        for service in group_services_data:
-            group_service_entry = GroupClass(**service)
-            session.add(group_service_entry)
+        # for service in group_services_data:
+        #     group_service_entry = GroupClass(**service)
+        #     session.add(group_service_entry)
             
         # for trainer in trainers_data:
         #     triner_entry = Trainer(**trainer)
@@ -608,7 +618,35 @@ def insert_data():
 
         #         current_date += timedelta(days=1)
 
+        for group in group_services_data:
+                group_entry = GroupClass(**group)
+                session.add(group_entry)
+
         session.commit()
+
+        groups = session.exec(select(GroupClass)).all()
+        
+        for group in groups:
+            current_date = start_date
+            while current_date < end_date:
+                for slot_time in time_slots:
+                    full_datetime = datetime.combine(current_date.date(), slot_time)
+
+                    time_slot = TimeSlot(
+                        trainer_id=group.trainer_id,
+                        group_class_id=group.id,
+                        dates=current_date.date(),
+                        times=full_datetime.time(),
+                        available=True,
+                        created_at=datetime.utcnow()
+                    )
+
+                    session.add(time_slot)
+
+                current_date += timedelta(days=1)
+
+        session.commit()
+        
             
 
 if __name__ == "__main__":
