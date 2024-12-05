@@ -8,26 +8,37 @@ import { Calendar } from "@/components/ui/calendar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { format } from 'date-fns'
+import { format, parse, isBefore, startOfDay, endOfDay } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock, User } from 'lucide-react'
 
 interface GroupClass {
   id: number
   name: string
-  duration: number | null
-  time: string
+  duration: number
   description: string
   price: number
-  availableSpots: number
-  trainerId: number
+  available_spots: number
+  trainer_id: number
 }
 
 interface Trainer {
   id: number
   name: string
-  title: string
+  description: string | null
   photo: string | null
+}
+
+interface TimeSlot {
+  id: number
+  date: string
+  times: string
+}
+
+interface ClassData {
+  GroupClass: GroupClass
+  Trainer: Trainer
+  TimeSlot: TimeSlot
 }
 
 interface BookingFormData {
@@ -38,9 +49,8 @@ interface BookingFormData {
 
 export default function Group() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [classes, setClasses] = useState<GroupClass[]>([])
-  const [trainers, setTrainers] = useState<Trainer[]>([])
-  const [selectedClass, setSelectedClass] = useState<GroupClass | null>(null)
+  const [classes, setClasses] = useState<ClassData[]>([])
+  const [selectedClass, setSelectedClass] = useState<ClassData | null>(null)
   const [showDetails, setShowDetails] = useState(false)
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -51,24 +61,15 @@ export default function Group() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetchTrainers()
-  }, [])
+  const currentDate = startOfDay(new Date())
 
   useEffect(() => {
     fetchClasses(selectedDate)
   }, [selectedDate])
 
-  const fetchTrainers = async () => {
-    try {
-      const response = await fetch(`http://localhost:8002/api/trainers`)
-      if (!response.ok) throw new Error('Failed to fetch trainers')
-      const data: Trainer[] = await response.json()
-      setTrainers(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch trainers')
-    }
+  const formattedTime = (time: string) => {
+    const parsedTime = parse(time, 'HH:mm:ss', new Date())
+    return format(parsedTime, 'HH:mm')
   }
 
   const fetchClasses = async (date: Date) => {
@@ -77,7 +78,7 @@ export default function Group() {
       const formattedDate = format(date, 'yyyy-MM-dd')
       const response = await fetch(`http://localhost:8002/api/group-classes?date=${formattedDate}`)
       if (!response.ok) throw new Error('Failed to fetch classes')
-      const data: GroupClass[] = await response.json()
+      const data: ClassData[] = await response.json()
       setClasses(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch classes')
@@ -86,8 +87,8 @@ export default function Group() {
     }
   }
 
-  const handleClassClick = (groupClass: GroupClass) => {
-    setSelectedClass(groupClass)
+  const handleClassClick = (classData: ClassData) => {
+    setSelectedClass(classData)
     setShowDetails(true)
   }
 
@@ -101,8 +102,10 @@ export default function Group() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          classId: selectedClass?.id,
-          date: format(selectedDate, 'yyyy-MM-dd'),
+          classId: selectedClass?.GroupClass.id,
+          timeSlotId: selectedClass?.TimeSlot.id,
+          date: selectedClass?.TimeSlot.date,
+          time: selectedClass?.TimeSlot.times,
           ...formData
         }),
       })
@@ -144,38 +147,54 @@ export default function Group() {
     </div>
   )
 
-  const renderClassCard = (groupClass: GroupClass) => {
-    const trainer = trainers.find(t => t.id === groupClass.trainerId)
+  const isClassAvailable = (classData: ClassData) => {
+    const now = new Date()
+    const classDate = parse(classData.TimeSlot.date, 'yyyy-MM-dd', new Date())
+    const classTime = parse(classData.TimeSlot.times, 'HH:mm:ss', classDate)
+    
+    if (isBefore(classDate, startOfDay(now))) {
+      return false
+    }
+    
+    if (isBefore(classTime, now)) {
+      return false
+    }
+    
+    return true
+  }
+
+  const renderClassCard = (classData: ClassData) => {
+    const { GroupClass: groupClass, Trainer: trainer, TimeSlot: timeSlot } = classData
+    const isAvailable = isClassAvailable(classData)
+
     return (
       <Card 
-        key={groupClass.id}
-        className="cursor-pointer hover:bg-accent transition-colors"
-        onClick={() => handleClassClick(groupClass)}
+        key={`${groupClass.id}-${timeSlot.id}`}
+        className={`cursor-pointer transition-colors ${isAvailable ? 'hover:bg-accent' : 'opacity-50'}`}
+        onClick={() => isAvailable && handleClassClick(classData)}
       >
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <Clock className="h-4 w-4" />
-                {groupClass.time}
+                {formattedTime(timeSlot.times)} • {groupClass.duration} мин
               </div>
               <h3 className="font-semibold mb-1">{groupClass.name}</h3>
-              <p className="text-sm text-muted-foreground mb-2">{groupClass.duration}</p>
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={trainer?.photo || ''} alt={trainer?.name} />
+                  <AvatarImage src={trainer.photo || ''} alt={trainer.name} />
                   <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
                 </Avatar>
                 <div className="text-sm">
-                  <div>{trainer?.name}</div>
-                  <div className="text-muted-foreground">{trainer?.title}</div>
+                  <div>{trainer.name}</div>
                 </div>
               </div>
             </div>
             <div className="text-right">
               <div className="text-sm font-medium">{groupClass.price} ₽</div>
               <div className="text-sm text-muted-foreground mt-1">
-                Осталось {groupClass.availableSpots} мест
+                Осталось {groupClass.available_spots} мест
               </div>
             </div>
           </div>
@@ -185,36 +204,37 @@ export default function Group() {
   }
 
   const renderClassDetails = () => {
-    const trainer = trainers.find(t => t.id === selectedClass?.trainerId)
+    if (!selectedClass) return null
+    const { GroupClass: groupClass, Trainer: trainer, TimeSlot: timeSlot } = selectedClass
     return (
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedClass?.name}</DialogTitle>
+            <DialogTitle>{groupClass.name}</DialogTitle>
             <DialogDescription>
               <div className="grid gap-4 py-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={trainer?.photo || ''} alt={trainer?.name} />
+                    <AvatarImage src={trainer.photo || ''} alt={trainer.name} />
                     <AvatarFallback><User className="h-6 w-6" /></AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium">{trainer?.name}</div>
-                    <div className="text-sm text-muted-foreground">{trainer?.title}</div>
+                    <div className="font-medium">{trainer.name}</div>
+                    <div className="text-sm text-muted-foreground">{trainer.description}</div>
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>{selectedClass?.duration}</span>
+                    <span>{formattedTime(timeSlot.times)} • {groupClass.duration} мин</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Осталось {selectedClass?.availableSpots} мест
+                    Осталось {groupClass.available_spots} мест
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{selectedClass?.description}</p>
+                <p className="text-sm text-muted-foreground">{groupClass.description}</p>
                 <div className="flex justify-between items-center">
-                  <div className="text-lg font-semibold">{selectedClass?.price} ₽</div>
+                  <div className="text-lg font-semibold">{groupClass.price} ₽</div>
                   <Button onClick={() => {
                     setShowDetails(false)
                     setShowBookingForm(true)
@@ -281,9 +301,10 @@ export default function Group() {
           <DialogTitle>Запись подтверждена</DialogTitle>
           <DialogDescription>
             <div className="grid gap-4 py-4">
-              <p>Вы успешно записаны на {selectedClass?.name}</p>
-              <p>Дата: {format(selectedDate, 'd MMMM yyyy', { locale: ru })}</p>
-              <p>Время: {selectedClass?.time}</p>
+              <p>Вы успешно записаны на {selectedClass?.GroupClass.name}</p>
+              <p>Дата: {selectedClass?.TimeSlot.date}</p>
+              <p>Время: {selectedClass?.TimeSlot.times}</p>
+              <p>Длительность: {selectedClass?.GroupClass.duration} мин</p>
               <Button onClick={() => setShowConfirmation(false)}>
                 Закрыть
               </Button>
@@ -311,7 +332,13 @@ export default function Group() {
         onSelect={(date) => {
           if (date) {
             setSelectedDate(date)
+            fetchClasses(date)
           }
+        }}
+        disabled={(date) => {
+          const currentDate = new Date()
+          currentDate.setHours(0, 0, 0, 0)
+          return date < currentDate
         }}
         className="rounded-md border"
         locale={ru}
