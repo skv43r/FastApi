@@ -5,7 +5,7 @@ from database import db
 from models import User
 from user_controller import UserController
 from typing import Annotated
-from models import Service, Trainer, TimeSlot, Booking, Branch
+from models import Service, Trainer, TimeSlot, Booking, Branch, GroupClass, TrainerGroup
 
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
@@ -37,13 +37,14 @@ async def return_services_endpoint(session: SessionDep):
     return services
 
 @router.get("/api/trainers")
-async def return_trainers_endpoint(session: SessionDep, service_id: int = Query(..., alias="serviceId")):
+async def return_trainers_endpoint(session: SessionDep, group_class_id: int = None, service_id: int = Query(None, alias="serviceId")):
     today = datetime.now().date()
     query = (
         select(Trainer)
         .join(Trainer.time_slots)
         .where(
-            TimeSlot.service_id == service_id,
+            (TimeSlot.service_id == service_id if service_id else True),
+            (TimeSlot.group_class_id == group_class_id if group_class_id else True),
             TimeSlot.dates >= today,
             TimeSlot.available == True
         )
@@ -95,3 +96,70 @@ async def post_booking_data_endpoint(session: SessionDep, booking_data: dict):
 async def get_about_info(session: SessionDep):
     branch = session.exec(select(Branch)).all()
     return branch
+
+@router.get("/api/booking-details")
+async def get_success_data(session: SessionDep):
+    query = (
+        select(
+            Booking.id,
+            Booking.dates,
+            TimeSlot.times.label("timeslot"),
+            Trainer.name.label("trainer_name"),
+            Service.name.label("service_name")
+        )
+        .join(TimeSlot, Booking.time == TimeSlot.id)
+        .join(Trainer, Booking.master == Trainer.id)
+        .join(Service, Booking.service == Service.id)
+        .order_by(Booking.created_at.desc())
+        .limit(1)
+    )
+    result = session.exec(query).first()
+
+    if result:
+        return {
+            "serviceName": result.service_name,
+            "trainerName": result.trainer_name,
+            "date": result.dates,
+            "time": result.timeslot
+        }
+    return {"error": "No booking found"}
+
+@router.get("/api/group-classes")
+async def get_group_classes_endpoint(session: SessionDep, date: str = Query(..., format="formattedDate")):
+    query = (
+        select(GroupClass, Trainer, TimeSlot)
+        .join(TrainerGroup, TrainerGroup.group_class_id == GroupClass.id)
+        .join(Trainer, Trainer.id == TrainerGroup.trainer_id)
+        .join(TimeSlot, TimeSlot.group_class_id == GroupClass.id)
+        .where(TimeSlot.dates == date, TimeSlot.available == True, GroupClass.available_spots > 0)
+        .order_by(TimeSlot.times)
+    )
+    
+    result = session.exec(query).all()
+
+    response = []
+    for group_class, trainer, time_slot in result:
+        response.append({
+            "GroupClass": {
+                "id": group_class.id,
+                "name": group_class.name,
+                "duration": group_class.duration,
+                "description": group_class.description,
+                "price": group_class.price,
+                "available_spots": group_class.available_spots,
+                "trainer_id": group_class.trainer_id
+            },
+            "Trainer": {
+                "id": trainer.id,
+                "name": trainer.name,
+                "description": trainer.description,
+                "photo": trainer.photo
+            },
+            "TimeSlot": {
+                "id": time_slot.id,
+                "date": time_slot.dates,
+                "times": time_slot.times
+            }
+        })
+    
+    return response
