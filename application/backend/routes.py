@@ -67,24 +67,46 @@ async def return_timeslots_endpoint(session: SessionDep, service_id: int, traine
 
 @router.post("/api/bookings")
 async def post_booking_data_endpoint(session: SessionDep, booking_data: dict):
-    timeslot = session.exec(select(TimeSlot).where(
-        TimeSlot.id == booking_data["timeSlotId"],
-        TimeSlot.dates == booking_data["date"],
-        TimeSlot.service_id == booking_data["serviceId"],
-        TimeSlot.available == True
-    )).first()
+    if "serviceId" in booking_data:
+        timeslot = session.exec(select(TimeSlot).where(
+            TimeSlot.id == booking_data["timeSlotId"],
+            TimeSlot.dates == booking_data["date"],
+            TimeSlot.service_id == booking_data["serviceId"],
+            TimeSlot.available == True
+        )).first()
 
-    if not timeslot:
-        raise HTTPException(status_code=400, detail="Выбранное время уже занято")
+        if not timeslot:
+            raise HTTPException(status_code=400, detail="Выбранное время уже занято")
+        
+        timeslot.available = False
+
+        new_booking = Booking(
+            service_id=booking_data["serviceId"],
+            trainer_id=booking_data["trainerId"],
+            dates=booking_data["date"],
+            timeslot_id=booking_data["timeSlotId"]
+        )
+
+    else:
+        timeslot = session.exec(select(TimeSlot).where(
+            TimeSlot.id == booking_data["timeSlotId"],
+        )).first()
+
+        if not timeslot:
+            raise HTTPException(status_code=400, detail="Выбранное время уже занято")
+        
+        timeslot.available_spots -= 1
+        if timeslot.available_spots == 0:
+            timeslot.available = False
     
-    timeslot.available = False
-    
-    new_booking = Booking(
-        service=booking_data["serviceId"],
-        master=booking_data["trainerId"],
-        dates=booking_data["date"],
-        time=booking_data["timeSlotId"]
-    )
+        new_booking = Booking(
+            class_id=booking_data["classId"],
+            dates=booking_data["date"],
+            timeslot_id=booking_data["timeSlotId"],
+            name=booking_data["name"],
+            phone=booking_data["phone"],
+            email=booking_data["email"]
+        )
 
     session.add(new_booking)
     session.commit()
@@ -107,9 +129,9 @@ async def get_success_data(session: SessionDep):
             Trainer.name.label("trainer_name"),
             Service.name.label("service_name")
         )
-        .join(TimeSlot, Booking.time == TimeSlot.id)
-        .join(Trainer, Booking.master == Trainer.id)
-        .join(Service, Booking.service == Service.id)
+        .join(TimeSlot, Booking.timeslot_id == TimeSlot.id)
+        .join(Trainer, Booking.trainer_id == Trainer.id)
+        .join(Service, Booking.service_id == Service.id)
         .order_by(Booking.created_at.desc())
         .limit(1)
     )
@@ -128,11 +150,10 @@ async def get_success_data(session: SessionDep):
 async def get_group_classes_endpoint(session: SessionDep, date: str = Query(..., format="formattedDate")):
     query = (
         select(GroupClass, Trainer, TimeSlot)
-        .join(TrainerGroup, TrainerGroup.group_class_id == GroupClass.id)
-        .join(Trainer, Trainer.id == TrainerGroup.trainer_id)
         .join(TimeSlot, TimeSlot.group_class_id == GroupClass.id)
-        .where(TimeSlot.dates == date, TimeSlot.available == True, GroupClass.available_spots > 0)
-        .order_by(TimeSlot.times)
+        .join(Trainer, Trainer.id == TimeSlot.trainer_id)
+        .where(TimeSlot.dates == date, TimeSlot.available == True, TimeSlot.available_spots > 0)
+        .order_by(TimeSlot.dates, TimeSlot.times)
     )
     
     result = session.exec(query).all()
@@ -145,9 +166,7 @@ async def get_group_classes_endpoint(session: SessionDep, date: str = Query(...,
                 "name": group_class.name,
                 "duration": group_class.duration,
                 "description": group_class.description,
-                "price": group_class.price,
-                "available_spots": group_class.available_spots,
-                "trainer_id": group_class.trainer_id
+                "price": group_class.price
             },
             "Trainer": {
                 "id": trainer.id,
@@ -157,8 +176,12 @@ async def get_group_classes_endpoint(session: SessionDep, date: str = Query(...,
             },
             "TimeSlot": {
                 "id": time_slot.id,
+                "trainer_id": time_slot.trainer_id,
                 "date": time_slot.dates,
-                "times": time_slot.times
+                "times": time_slot.times,
+                "available": time_slot.available,
+                "available_spots": time_slot.available_spots,
+                "created_at": time_slot.created_at
             }
         })
     
