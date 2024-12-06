@@ -18,8 +18,6 @@ interface GroupClass {
   duration: number
   description: string
   price: number
-  available_spots: number
-  trainer_id: number
 }
 
 interface Trainer {
@@ -31,8 +29,12 @@ interface Trainer {
 
 interface TimeSlot {
   id: number
+  trainer_id: number
   date: string
   times: string
+  available: boolean
+  available_spots: number
+  created_at: string
 }
 
 interface ClassData {
@@ -96,6 +98,14 @@ export default function Group() {
     e.preventDefault()
     try {
       setLoading(true)
+      const payload = {
+        classId: selectedClass?.GroupClass.id,
+        timeSlotId: selectedClass?.TimeSlot.id,
+        date: selectedClass?.TimeSlot.date,
+        time: selectedClass?.TimeSlot.times,
+        ...formData
+      }
+      console.log('Booking payload:', payload)
       const response = await fetch('http://localhost:8002/api/bookings', {
         method: 'POST',
         headers: {
@@ -194,7 +204,7 @@ export default function Group() {
             <div className="text-right">
               <div className="text-sm font-medium">{groupClass.price} ₽</div>
               <div className="text-sm text-muted-foreground mt-1">
-                Осталось {groupClass.available_spots} мест
+                Осталось {timeSlot.available_spots} мест
               </div>
             </div>
           </div>
@@ -229,7 +239,7 @@ export default function Group() {
                     <span>{formattedTime(timeSlot.times)} • {groupClass.duration} мин</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Осталось {groupClass.available_spots} мест
+                    Осталось {timeSlot.available_spots} мест
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">{groupClass.description}</p>
