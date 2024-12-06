@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import Optional, List
 from datetime import date, time, datetime
 import sqlalchemy as sa
@@ -43,10 +43,14 @@ class GroupServices(SQLModel, table=True):
 
 class Booking(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    service: int = Field(nullable=False)
-    master: int = Field(nullable=False)
+    service_id: Optional[int] = Field(default=None)
+    class_id: Optional[int] = Field(default=None)
+    trainer_id: Optional[int] = Field(default=None)
+    timeslot_id: int = Field(nullable=False)
     dates: str = Field(nullable=False)
-    time: int = Field(nullable=False)
+    user_name: Optional[str] = Field(default=None)
+    user_email: Optional[str] = Field(default=None)
+    user_phone: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class TrainerService(SQLModel, table=True):
@@ -89,11 +93,16 @@ class TimeSlot(SQLModel, table=True):
     dates: date = Field(nullable=False)
     times: time = Field(nullable=False)
     available: bool = Field(default=True)
+    available_spots: Optional[int] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     trainer: Optional["Trainer"] = Relationship(back_populates="time_slots")
     service: Optional["Service"] = Relationship(back_populates="time_slots")
     group_class: Optional["GroupClass"] = Relationship(back_populates="time_slots")
+
+    __table_args__ = (
+        UniqueConstraint("trainer_id", "group_class_id", "dates", "times", name="unique_time_slot"),
+    )
 
 class Branch(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -110,8 +119,6 @@ class GroupClass(SQLModel, table=True):
     duration: float | None = Field(default=None)
     description: str | None = Field(default=None)
     price: int | None = Field(default=None, index=True)
-    available_spots: int = Field(default=0)
-    trainer_id: int | None = Field(default=None, foreign_key="trainer.id")
 
     trainers: list["Trainer"] = Relationship(back_populates="groups", link_model=TrainerGroup)
     time_slots: list["TimeSlot"] = Relationship(back_populates="group_class")
