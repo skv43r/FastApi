@@ -257,9 +257,7 @@ group_services_data = [
 * исправление осанки
 * медитативный подход в практике дает снятие стресса и гармонизацию психологического состояния, улучшается качество сна
         """,
-        "price": 900,
-        "available_spots": 10,
-        "trainer_id": 7
+        "price": 900
     },
     {
         "name": "Йога-терапия позвоночника",
@@ -273,9 +271,7 @@ group_services_data = [
 * исцеление остеохондроза и других возрастных изменений в позвоночнике в результате восстановления природной регенерации тканей.
 Практика подходит для тех, кто только начинает знакомиться йогой, имеет ограничения подвижности в позвоночнике и другие заболевания опорно-двигательного аппарата.
         """,
-        "price": 900,
-        "available_spots": 10,
-        "trainer_id": 8
+        "price": 900
     },
     {
         "name": "Йога для беременных",
@@ -294,9 +290,7 @@ group_services_data = [
 5. Создание гармоничной связи с ребенком. 
 6. Улучшение кровообращения и общего здоровья.
         """,
-        "price": 900,
-        "available_spots": 10,
-        "trainer_id": 6
+        "price": 900
     },
     {
         "name": "Детская аэро-йога",
@@ -313,9 +307,7 @@ group_services_data = [
 
 ?Занятия позволяют детям расслабиться, избавиться от избытка энергии и чрезмерной напряжённости в теле, балансируют тело.
         """,
-        "price": 700,
-        "available_spots": 10,
-        "trainer_id": 7
+        "price": 700
     },
     {
         "name": "Хатха-йога для детей",
@@ -339,9 +331,7 @@ group_services_data = [
 
 Практика подходит для детей и подростков от 7 до 16 лет.
         """,
-        "price": 700,
-        "available_spots": 10,
-        "trainer_id": 2
+        "price": 700
     },
     {
         "name": "Хатха-йога для начинающих",
@@ -354,9 +344,7 @@ group_services_data = [
 * повысят эластичность мышц
 * восстановят нервную систему, помогая справляться с переживаниями и стрессом.
         """,
-        "price": 900,
-        "available_spots": 10,
-        "trainer_id": 1
+        "price": 900
     },
     {
         "name": "Утренняя хатха для начинающих",
@@ -369,9 +357,7 @@ group_services_data = [
 * повысят эластичность мышц
 * восстановят нервную систему, помогая справляться с переживаниями и стрессом.
         """,
-        "price": 900,
-        "available_spots": 10,
-        "trainer_id": 5
+        "price": 900
     },
     {
         "name": "FLY Йога в гамаках",
@@ -384,9 +370,7 @@ Fly yoga — это не просто йога в гамаке, она совм�
 
 Приятный бонус — тренировки на гамаке помогают справиться с тревожностью и «перезагрузить» головной мозг, улучшить работу вестибулярного аппарата.
         """,
-        "price": 899,
-        "available_spots": 10,
-        "trainer_id": 4
+        "price": 899
     },
     {
         "name": "Медитация с поющими чашами. Открытый урок.",
@@ -412,9 +396,7 @@ Fly yoga — это не просто йога в гамаке, она совм�
 ?стимулировать тело на самоисцеление 
 
 ?✨После практики почувствуете перезагрузку всей вашей системы , улучшение физического и психического здоровья, освободитесь от эмоциональных блоков, услышите свой внутренний голос, уйдете домой с новыми прекрасными мыслями ?
-        """,
-        "available_spots": 15,
-        "trainer_id": 1
+        """
     },
     {
         "name": "Аэро-йога",
@@ -429,9 +411,7 @@ Fly yoga — это не просто йога в гамаке, она совм�
 - снятие мышечных спазмов, напряжения с позвоночника.
 - улучшение работы сердечно-сосудистой и дыхательных систем.
         """,
-        "price": 900,
-        "available_spots": 10,
-        "trainer_id": 5
+        "price": 900
     }
 ]
 
@@ -510,10 +490,6 @@ https://t.me/zdorovayaspina_julyandronik
     }
 ]
 
-time_slots = [time(hour, minute) for hour in range(9, 21) for minute in (0, 30)]
-start_date = datetime(2024, 12, 1)
-end_date = datetime(2024, 12, 7)
-
 branch_data = [
     {
         "name": "Йога Хом",
@@ -532,44 +508,23 @@ branch_data = [
     }
 ]
 
+time_slots = [time(hour, minute) for hour in range(16, 17) for minute in (0, 30)]
+start_date = datetime(2024, 12, 6)
+end_date = datetime(2024, 12, 15)
+
 def insert_data():
     with next(db.get_session()) as session:
 
-        # for service in group_services_data:
-        #     group_service_entry = GroupClass(**service)
-        #     session.add(group_service_entry)
-            
-        # for trainer in trainers_data:
-        #     triner_entry = Trainer(**trainer)
-        #     session.add(triner_entry)
+        # for group in group_services_data:
+        #         group_entry = GroupClass(**group)
+        #         session.add(group_entry)
 
-        # trainers = session.exec(select(Trainer)).all()
+        # session.commit()
+        
         # services = session.exec(select(Service)).all()
-
-        # for trainer in trainers:
-        #     for service in services:
-        #         current_date = start_date
-        #         while current_date <= end_date:
-        #             for slot_time in time_slots:
-        #                 full_datetime = datetime.combine(current_date.date(), slot_time)
-
-        #                 time_slot = TimeSlot(
-        #                     trainer_id=trainer.id,
-        #                     service_id=service.id,
-        #                     dates=current_date.date(),
-        #                     times=full_datetime.time(),
-        #                     available=True,
-        #                     created_at=datetime.utcnow()
-        #                 )
-        #                 session.add(time_slot)
-
-        #             current_date += timedelta(days=1)
-
-        # for data in branch_data:
-        #     branch_entry = Branch(**data)
-        #     session.add(branch_entry)
-
-        # services = session.exec(select(Service)).all()
+        # groups = session.exec(select(GroupClass)).all()
+        # trainer_service_pairs = session.exec(select(TrainerService)).all()
+        trainer_group_pairs = session.exec(select(TrainerGroup)).all()
 
         # for service in services:
         #     if service.type.lower() == "massage":
@@ -579,65 +534,55 @@ def insert_data():
         #         random_trainer = random.randint(2, 8)
         #         trainer_service_entry = TrainerService(trainer_id=random_trainer, service_id=service.id)
         #         session.add(trainer_service_entry)
-
+        
         # session.commit()
 
-        # trainer_service_pairs = session.exec(select(TrainerService)).all()
+        # for group in groups:
+        #         random_trainer = random.randint(2, 8)
+        #         trainer_group_entry = TrainerGroup(trainer_id=random_trainer, group_class_id=group.id)
+        #         session.add(trainer_group_entry)
+
+        # session.commit()
 
         # for pair in trainer_service_pairs:
         #     trainer_id = pair.trainer_id
         #     service_id = pair.service_id
-        #     service = session.get(Service, service_id)
 
         #     current_date = start_date
         #     while current_date <= end_date:
         #         for slot_time in time_slots:
         #             full_datetime = datetime.combine(current_date.date(), slot_time)
 
-        #             if service.type.lower() == "massage" and trainer_id == 1 and time(10, 0) <= slot_time <= time(12, 0):
-        #                 time_slot = TimeSlot(
-        #                     trainer_id=trainer_id,
-        #                     service_id=service_id,
-        #                     dates=current_date.date(),
-        #                     times=full_datetime.time(),
-        #                     available=True,
-        #                     created_at=datetime.utcnow()
-        #                 )
-        #                 session.add(time_slot)
-
-        #             elif service.type.lower() != "massage" and time(13, 0) <= slot_time <= time(14, 0):
-        #                 time_slot = TimeSlot(
-        #                     trainer_id=trainer_id,
-        #                     service_id=service_id,
-        #                     dates=current_date.date(),
-        #                     times=full_datetime.time(),
-        #                     available=True,
-        #                     created_at=datetime.utcnow()
-        #                 )
-        #                 session.add(time_slot)
+        #             time_slot = TimeSlot(
+        #                 trainer_id=trainer_id,
+        #                 service_id=service_id,
+        #                 dates=current_date.date(),
+        #                 times=full_datetime.time(),
+        #                 available=True,
+        #                 created_at=datetime.utcnow()
+        #             )
+        #             session.add(time_slot)
 
         #         current_date += timedelta(days=1)
 
-        for group in group_services_data:
-                group_entry = GroupClass(**group)
-                session.add(group_entry)
+        #     session.commit()
 
-        session.commit()
-
-        groups = session.exec(select(GroupClass)).all()
+        for pair in trainer_group_pairs:
+            trainer_id = pair.trainer_id
+            group_id = pair.group_class_id
         
-        for group in groups:
             current_date = start_date
-            while current_date < end_date:
+            while current_date <= end_date:
                 for slot_time in time_slots:
                     full_datetime = datetime.combine(current_date.date(), slot_time)
 
                     time_slot = TimeSlot(
-                        trainer_id=group.trainer_id,
-                        group_class_id=group.id,
+                        trainer_id=trainer_id,
+                        group_class_id=group_id,
                         dates=current_date.date(),
                         times=full_datetime.time(),
                         available=True,
+                        available_spots=random.randint(1, 10),
                         created_at=datetime.utcnow()
                     )
 
@@ -645,9 +590,7 @@ def insert_data():
 
                 current_date += timedelta(days=1)
 
-        session.commit()
-        
-            
+            session.commit()
 
 if __name__ == "__main__":
     insert_data()
