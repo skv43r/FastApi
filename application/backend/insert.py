@@ -515,15 +515,33 @@ end_date = datetime(2024, 12, 15)
 def insert_data():
     with next(db.get_session()) as session:
 
+        # for trainer in trainers_data:
+        #     trainer_entry = Trainer(**trainer)
+        #     session.add(trainer_entry)
+
+        # session.commit()
+
+        # for data in branch_data:
+        #     data_entry = Branch(**data)
+        #     session.add(data_entry)
+
+        # session.commit()
+
+        # for service in services_data:
+        #     service_entry = Service(**service)
+        #     session.add(service_entry)
+
+        # session.commit()
+
         # for group in group_services_data:
-        #         group_entry = GroupClass(**group)
-        #         session.add(group_entry)
+        #     group_entry = GroupClass(**group)
+        #     session.add(group_entry)
 
         # session.commit()
         
-        # services = session.exec(select(Service)).all()
-        # groups = session.exec(select(GroupClass)).all()
-        # trainer_service_pairs = session.exec(select(TrainerService)).all()
+        services = session.exec(select(Service)).all()
+        groups = session.exec(select(GroupClass)).all()
+        trainer_service_pairs = session.exec(select(TrainerService)).all()
         trainer_group_pairs = session.exec(select(TrainerGroup)).all()
 
         # for service in services:
@@ -544,28 +562,28 @@ def insert_data():
 
         # session.commit()
 
-        # for pair in trainer_service_pairs:
-        #     trainer_id = pair.trainer_id
-        #     service_id = pair.service_id
+        for pair in trainer_service_pairs:
+            trainer_id = pair.trainer_id
+            service_id = pair.service_id
 
-        #     current_date = start_date
-        #     while current_date <= end_date:
-        #         for slot_time in time_slots:
-        #             full_datetime = datetime.combine(current_date.date(), slot_time)
+            current_date = start_date
+            while current_date <= end_date:
+                for slot_time in time_slots:
+                    full_datetime = datetime.combine(current_date.date(), slot_time)
 
-        #             time_slot = TimeSlot(
-        #                 trainer_id=trainer_id,
-        #                 service_id=service_id,
-        #                 dates=current_date.date(),
-        #                 times=full_datetime.time(),
-        #                 available=True,
-        #                 created_at=datetime.utcnow()
-        #             )
-        #             session.add(time_slot)
+                    time_slot = TimeSlot(
+                        trainer_id=trainer_id,
+                        service_id=service_id,
+                        dates=current_date.date(),
+                        times=full_datetime.time(),
+                        available=True,
+                        created_at=datetime.utcnow()
+                    )
+                    session.add(time_slot)
 
-        #         current_date += timedelta(days=1)
+                current_date += timedelta(days=1)
 
-        #     session.commit()
+            session.commit()
 
         for pair in trainer_group_pairs:
             trainer_id = pair.trainer_id
