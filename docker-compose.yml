@@ -85,27 +85,49 @@ services:
     networks:
       - dev
 
-  admin:
+  # admin:
+  #   build: 
+  #     context: ./admin
+  #   ports:
+  #     - "5001:5000"
+  #   depends_on:
+  #      - postgres
+  #      - backend
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+  #   networks:
+  #     - dev
+
+  # admin_backend:
+  #   build: 
+  #     context: ./admin/backend
+  #   ports:
+  #     - "5001:5000"
+  #   depends_on:
+  #      - postgres
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+  #   networks:
+  #     - dev
+  #   volumes:
+  #     - ./admin/backend:/app
+
+  admin_frontend:
     build: 
-      context: ./admin
+      context: ./admin/frontend
     ports:
-      - "5000:5000"
-    depends_on:
-       - postgres
-       - backend
-    environment:
-      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+      - "3003:3000"
     networks:
       - dev
 
-  rabbitmq:
-    image: rabbitmq:latest
-    hostname: rabbitmq
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    networks:
-      - dev
+  # rabbitmq:
+  #   image: rabbitmq:latest
+  #   hostname: rabbitmq
+  #   ports:
+  #     - "15672:15672"
+  #     - "5672:5672"
+  #   networks:
+  #     - dev
 
 
 volumes:
