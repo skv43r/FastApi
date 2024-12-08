@@ -106,7 +106,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Trainers */}
-            <Link href="/admin/trainers">
+            <Link href="/trainers">
               <Card className="hover:bg-accent transition-colors cursor-pointer">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
