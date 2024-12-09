@@ -85,32 +85,19 @@ services:
     networks:
       - dev
 
-  # admin:
-  #   build: 
-  #     context: ./admin
-  #   ports:
-  #     - "5001:5000"
-  #   depends_on:
-  #      - postgres
-  #      - backend
-  #   environment:
-  #     - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
-  #   networks:
-  #     - dev
-
-  # admin_backend:
-  #   build: 
-  #     context: ./admin/backend
-  #   ports:
-  #     - "5001:5000"
-  #   depends_on:
-  #      - postgres
-  #   environment:
-  #     - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
-  #   networks:
-  #     - dev
-  #   volumes:
-  #     - ./admin/backend:/app
+  admin_backend:
+    build: 
+      context: ./admin/backend
+    ports:
+      - "5001:5000"
+    depends_on:
+       - postgres
+    environment:
+      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+    networks:
+      - dev
+    volumes:
+      - ./admin/backend:/app
 
   admin_frontend:
     build: 
