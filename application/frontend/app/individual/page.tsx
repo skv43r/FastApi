@@ -16,7 +16,6 @@ interface Service {
   description: string | null
   price: number | null
   photo: string | null
-  category: string
   type: string
 }
 
@@ -80,7 +79,7 @@ export default function IndividualBookingPage() {
   const fetchServices = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:8002/api/services?category=individual')
+      const response = await fetch('http://localhost:8002/api/services?')
       if (!response.ok) throw new Error('Failed to fetch services')
       const data = await response.json()
       setServices(data)
@@ -236,7 +235,7 @@ export default function IndividualBookingPage() {
                 {service.duration && (
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-1" />
-                    {service.duration} ч
+                    {service.duration} мин.
                   </div>
                 )}
                 {service.price && (
