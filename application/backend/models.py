@@ -3,43 +3,43 @@ from typing import Optional, List
 from datetime import date, time, datetime
 import sqlalchemy as sa
 
-class User(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    email: str = Field(index=True, unique=True)
-    avatar: str | None = Field(default=None)
+# class User(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     name: str = Field(index=True)
+#     email: str = Field(index=True, unique=True)
+#     avatar: str | None = Field(default=None)
 
-class IndividualSpecialists(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    description: str | None = Field(default=None)
-    photo: str | None = Field(default=None)
+# class IndividualSpecialists(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     name: str = Field(index=True)
+#     description: str | None = Field(default=None)
+#     photo: str | None = Field(default=None)
 
-class IndividualServices(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    description: str | None = Field(default=None)
-    price: int | None = Field(default=None, index=True)
-    photo: str | None = Field(default=None)
+# class IndividualServices(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     name: str = Field(index=True)
+#     description: str | None = Field(default=None)
+#     price: int | None = Field(default=None, index=True)
+#     photo: str | None = Field(default=None)
 
-class Massage(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    description: str | None = Field(default=None)
-    price: int | None = Field(default=None, index=True)
+# class Massage(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     name: str = Field(index=True)
+#     description: str | None = Field(default=None)
+#     price: int | None = Field(default=None, index=True)
 
-class GroupSpecialists(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    description: str | None = Field(default=None)
-    photo: str | None = Field(default=None)
+# class GroupSpecialists(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     name: str = Field(index=True)
+#     description: str | None = Field(default=None)
+#     photo: str | None = Field(default=None)
 
-class GroupServices(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    description: str | None = Field(default=None)
-    price: int | None = Field(default=None, index=True)
-    photo: str | None = Field(default=None)
+# class GroupServices(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     name: str = Field(index=True)
+#     description: str | None = Field(default=None)
+#     price: int | None = Field(default=None, index=True)
+#     photo: str | None = Field(default=None)
 
 class Booking(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -68,7 +68,6 @@ class Service(SQLModel, table=True):
     description: str | None = Field(default=None)
     price: int | None = Field(default=None, index=True)
     photo: str | None = Field(default=None)
-    category: str = Field(index=True)
     type: str = Field(index=True)
 
     time_slots: list["TimeSlot"] = Relationship(back_populates="service")
