@@ -121,7 +121,7 @@ export default function Home() {
             </Link>
 
             {/* Services */}
-            <Link href="/admin/services">
+            <Link href="/services">
               <Card className="hover:bg-accent transition-colors cursor-pointer">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -136,7 +136,7 @@ export default function Home() {
             </Link>
 
             {/* Group Classes */}
-            <Link href="/admin/group-classes">
+            <Link href="/group">
               <Card className="hover:bg-accent transition-colors cursor-pointer">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export default function Home() {
             </Link>
 
             {/* Time Slots */}
-            <Link href="/admin/time-slots">
+            <Link href="/time">
               <Card className="hover:bg-accent transition-colors cursor-pointer">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
