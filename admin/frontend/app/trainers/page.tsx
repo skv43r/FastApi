@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
-const BASE_URL = 'http://localhost:8002/api';
+const BASE_URL = 'http://localhost:5001/api/admin';
 
 interface Trainer {
   id: number;
@@ -42,6 +42,7 @@ export default function Trainers() {
       setTrainers(data)
     } catch (err) {
       setError('Произошла ошибка при загрузке данных')
+      console.log(err)
     } finally {
       setIsLoading(false)
     }
@@ -49,7 +50,7 @@ export default function Trainers() {
 
   const addTrainer = async (trainer: Omit<Trainer, 'id'>) => {
     try {
-      const response = await fetch(`${BASE_URL}/trainers`, {
+      const response = await fetch(`${BASE_URL}/trainer/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ export default function Trainers() {
 
   const updateTrainer = async (trainer: Trainer) => {
     try {
-      const response = await fetch(`${BASE_URL}/trainers/${trainer.id}`, {
+      const response = await fetch(`${BASE_URL}/trainer/edit/${trainer.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +90,7 @@ export default function Trainers() {
 
   const deleteTrainer = async (id: number) => {
     try {
-      const response = await fetch(`${BASE_URL}/trainers/${id}`, {
+      const response = await fetch(`${BASE_URL}/trainer/delete/${id}`, {
         method: 'DELETE',
       })
       if (!response.ok) {
