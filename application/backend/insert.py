@@ -40,7 +40,6 @@ services_data = [
         """,
         "price": 3000,
         "photo": "https://assets.yclients.com/main_service_image/basic/a/a3/a3fa859373f5c5b_20240908015458.png",
-        "category": "individual",
         "type": "training"
     },
     {
@@ -55,7 +54,6 @@ services_data = [
         """,
         "price": 3000,
         "photo": "https://assets.yclients.com/main_service_image/basic/e/eb/ebc3d23b4d1c8c6_20240813212720.png",
-        "category": "individual",
         "type": "training"
     },
     {
@@ -80,8 +78,7 @@ services_data = [
             Во время индивидуальных занятий, инструктор проводит тематические медитации, что помогает создать связь со своим малышом, снизить тревожность и взрастить в себе чувство доверия
         """,
         "price": 3000,
-        "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
+        "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",  
         "type": "training"
     },
     {
@@ -95,7 +92,6 @@ services_data = [
         """,
         "price": 2000,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -109,7 +105,6 @@ services_data = [
         """,
         "price": 2500,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -123,7 +118,6 @@ services_data = [
         """,
         "price": 3500,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -137,7 +131,6 @@ services_data = [
         """,
         "price": 2000,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -151,7 +144,6 @@ services_data = [
         """,
         "price": 2500,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -165,7 +157,6 @@ services_data = [
         """,
         "price": 2000,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -179,7 +170,6 @@ services_data = [
         """,
         "price": 2000,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -193,7 +183,6 @@ services_data = [
         """,
         "price": 1500,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -207,7 +196,6 @@ services_data = [
         """,
         "price": 2500,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -221,7 +209,6 @@ services_data = [
         """,
         "price": 1500,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     },
     {
@@ -235,7 +222,6 @@ services_data = [
         """,
         "price": 1500,
         "photo": "https://assets.yclients.com/main_service_image/basic/c/cf/cf26b900bf1bb68_20240912172950.png",
-        "category": "individual",
         "type": "massage"
     }
 ]
@@ -562,53 +548,53 @@ def insert_data():
 
         # session.commit()
 
-        for pair in trainer_service_pairs:
-            trainer_id = pair.trainer_id
-            service_id = pair.service_id
+        # for pair in trainer_service_pairs:
+        #     trainer_id = pair.trainer_id
+        #     service_id = pair.service_id
 
-            current_date = start_date
-            while current_date <= end_date:
-                for slot_time in time_slots:
-                    full_datetime = datetime.combine(current_date.date(), slot_time)
+        #     current_date = start_date
+        #     while current_date <= end_date:
+        #         for slot_time in time_slots:
+        #             full_datetime = datetime.combine(current_date.date(), slot_time)
 
-                    time_slot = TimeSlot(
-                        trainer_id=trainer_id,
-                        service_id=service_id,
-                        dates=current_date.date(),
-                        times=full_datetime.time(),
-                        available=True,
-                        created_at=datetime.utcnow()
-                    )
-                    session.add(time_slot)
+        #             time_slot = TimeSlot(
+        #                 trainer_id=trainer_id,
+        #                 service_id=service_id,
+        #                 dates=current_date.date(),
+        #                 times=full_datetime.time(),
+        #                 available=True,
+        #                 created_at=datetime.utcnow()
+        #             )
+        #             session.add(time_slot)
 
-                current_date += timedelta(days=1)
+        #         current_date += timedelta(days=1)
 
-            session.commit()
+        #     session.commit()
 
-        for pair in trainer_group_pairs:
-            trainer_id = pair.trainer_id
-            group_id = pair.group_class_id
+        # for pair in trainer_group_pairs:
+        #     trainer_id = pair.trainer_id
+        #     group_id = pair.group_class_id
         
-            current_date = start_date
-            while current_date <= end_date:
-                for slot_time in time_slots:
-                    full_datetime = datetime.combine(current_date.date(), slot_time)
+        #     current_date = start_date
+        #     while current_date <= end_date:
+        #         for slot_time in time_slots:
+        #             full_datetime = datetime.combine(current_date.date(), slot_time)
 
-                    time_slot = TimeSlot(
-                        trainer_id=trainer_id,
-                        group_class_id=group_id,
-                        dates=current_date.date(),
-                        times=full_datetime.time(),
-                        available=True,
-                        available_spots=random.randint(1, 10),
-                        created_at=datetime.utcnow()
-                    )
+        #             time_slot = TimeSlot(
+        #                 trainer_id=trainer_id,
+        #                 group_class_id=group_id,
+        #                 dates=current_date.date(),
+        #                 times=full_datetime.time(),
+        #                 available=True,
+        #                 available_spots=random.randint(1, 10),
+        #                 created_at=datetime.utcnow()
+        #             )
 
-                    session.add(time_slot)
+        #             session.add(time_slot)
 
-                current_date += timedelta(days=1)
+        #         current_date += timedelta(days=1)
 
-            session.commit()
+        #     session.commit()
 
 if __name__ == "__main__":
     insert_data()
