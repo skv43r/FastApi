@@ -69,7 +69,7 @@ async def add_service_endpoin(session: SessionDep, service: Service):
         if not service.name or not service.type:
                 raise HTTPException(status_code=400,
                                     detail="Название и тип обязательны")
-        existing_service = session.get(Trainer, service.id) if service.id else None
+        existing_service = session.get(Service, service.id) if service.id else None
         if existing_service:
                 raise HTTPException(status_code=400,
                                     detail="Сервис уже существует")
@@ -81,7 +81,7 @@ async def add_service_endpoin(session: SessionDep, service: Service):
              raise e
     
 @router.delete("/api/admin/service/delete/{service_id}")
-async def delete__trainer_endpoint(session: SessionDep, service_id: int):
+async def delete_service_endpoint(session: SessionDep, service_id: int):
     try:
         service = session.get(Service, service_id)
         if not service:
@@ -93,7 +93,7 @@ async def delete__trainer_endpoint(session: SessionDep, service_id: int):
         raise e
     
 @router.put("/api/admin/service/edit/{service_id}")
-async def edit_trainer_endpoint(session: SessionDep, service_id: int, service_data: Service):
+async def edit_service_endpoint(session: SessionDep, service_id: int, service_data: Service):
     try:
         service = session.get(Service, service_id)
         if not service:
@@ -108,6 +108,58 @@ async def edit_trainer_endpoint(session: SessionDep, service_id: int, service_da
     except Exception as e:
         session.rollback()
         raise e
+    
+@router.get("/api/admin/groups")
+async def return_groups_endpoint(session: SessionDep):
+    groups = session.exec(select(GroupClass)).all()
+    return groups
+
+@router.post("/api/admin/group/add")
+async def add_group_endpoin(session: SessionDep, group: GroupClass):
+    try:
+        if not group.name:
+                raise HTTPException(status_code=400,
+                                    detail="Название является обязательным")
+        existing_group = session.get(GroupClass, group.id) if group.id else None
+        if existing_group:
+                raise HTTPException(status_code=400,
+                                    detail="Групповое занятие уже существует")
+        session.add(group)
+        session.commit()
+        session.refresh(group)
+    except Exception as e:
+             session.rollback()
+             raise e
+    
+@router.delete("/api/admin/group/delete/{group_id}")
+async def delete__group_endpoint(session: SessionDep, group_id: int):
+    try:
+        group = session.get(GroupClass, group_id)
+        if not group:
+                    raise HTTPException(status_code=404,
+                                        detail="Групповое занятие не найдено")
+        session.delete(group)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    
+@router.put("/api/admin/group/edit/{group_id}")
+async def edit_group_endpoint(session: SessionDep, group_id: int, group_data: GroupClass):
+    try:
+        group = session.get(GroupClass, group_id)
+        if not group:
+            raise HTTPException(status_code=404, detail="Групповое занятие не найдено")
+        
+        group.name = group_data.name
+        group.duration = group_data.duration
+        group.description = group_data.description
+        group.price = group_data.price
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+
 
 # @router.get("/api/trainers")
 # async def return_trainers_endpoint(session: SessionDep, group_class_id: int = None, service_id: int = Query(None, alias="serviceId")):
