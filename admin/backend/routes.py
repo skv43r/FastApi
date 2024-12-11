@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 from datetime import datetime
 from database import db 
 from typing import Annotated
@@ -160,6 +161,44 @@ async def edit_group_endpoint(session: SessionDep, group_id: int, group_data: Gr
         session.rollback()
         raise e
 
+@router.get("/api/admin/times")
+async def return_timeslots_endpoint(session: SessionDep, trainer_id: int = Query(..., description="ID тренера"), date: str = Query(..., description="Дата записи")):
+    query = (
+        select(
+            TimeSlot.id.label("timeslot_id"),
+            Trainer.name.label("trainer_name"),
+            Service.name.label("service_name"),
+            GroupClass.name.label("group_name"),
+            TimeSlot.dates.label("date"),
+            TimeSlot.times.label("time"),
+            TimeSlot.available.label("status"),
+            TimeSlot.available_spots.label("available_spots"),
+        )
+        .join(Trainer, TimeSlot.trainer_id == Trainer.id)
+        .join(Service, TimeSlot.service_id == Service.id, isouter=True)
+        .join(GroupClass, TimeSlot.group_class_id == GroupClass.id, isouter=True)
+    )
+    
+    if trainer_id:
+        query = query.where(TimeSlot.trainer_id == trainer_id)
+    if date:
+        query = query.where(TimeSlot.dates == date)
+        
+    time_slots = session.exec(query).all()
+    
+    return [
+        {
+            "timeslot_id": ts.timeslot_id,
+            "trainer_name": ts.trainer_name or "Тренер не указан",
+            "service_name": ts.service_name or "Не указано",
+            "group_name": ts.group_name or "Не указано",
+            "date": ts.date if ts.date else "Дата не указана",
+            "time": ts.time if ts.time else "Время не указано",
+            "status": ts.status or False,
+            "available_spots": ts.available_spots or 0,
+        }
+        for ts in time_slots
+    ]
 
 # @router.get("/api/trainers")
 # async def return_trainers_endpoint(session: SessionDep, group_class_id: int = None, service_id: int = Query(None, alias="serviceId")):
