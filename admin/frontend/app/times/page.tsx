@@ -67,6 +67,7 @@ export default function Times() {
       const response = await fetch(`${BASE_URL}/times?trainer_id=${selectedTrainerId}&date=${formattedDate}`);
       if (!response.ok) throw new Error('Failed to fetch time slots');
       const data = await response.json();
+      console.log(data)
       setTimeSlots(data);
     } catch (err) {
       setError('Произошла ошибка при загрузке временных слотов');
@@ -339,23 +340,22 @@ interface TimeSlotCardProps {
 }
 
 function TimeSlotCard({ timeSlot, onEdit, onDelete }: TimeSlotCardProps) {
-  const title = timeSlot.group_name || timeSlot.service_name || 'Не указано';
-  const isGroupClass = !!timeSlot.group_name;
+  const isGroupClass = timeSlot.group_name !== "Не указано";
+  console.log(timeSlot.group_name)
 
   return (
     <Card className="mb-4">
       <CardHeader>
-        <CardTitle className="font-bold">{title}</CardTitle>
+        <CardTitle className="font-bold">{isGroupClass? timeSlot.group_name : timeSlot.service_name}</CardTitle>
       </CardHeader>
       <CardContent>
         <p>Время: {timeSlot.time}</p>
-        {isGroupClass ? (
+        {isGroupClass && (
           <>
             <p>Доступные места: {timeSlot.available_spots}</p>
           </>
-        ) : (
-          <p>Услуга: {timeSlot.service_name}</p>
-        )}
+        )
+        }
         <p>Статус: {timeSlot.status ? 'Доступно' : 'Недоступно'}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
