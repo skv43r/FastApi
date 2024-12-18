@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 
-const BASE_URL = 'http://localhost:8002/api';
+const BASE_URL = 'http://localhost:5001/api/admin';
 
 interface TimeSlot {
   timeslot_id: number;
@@ -47,6 +47,8 @@ export function BlockPage() {
   const [error, setError] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingTimeSlot, setEditingTimeSlot] = useState<TimeSlot | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()) // Added state for selected date
+  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchTimeSlots()
@@ -56,15 +58,20 @@ export function BlockPage() {
   }, [])
 
   const fetchTimeSlots = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/time-slots`)
-      if (!response.ok) throw new Error('Failed to fetch time slots')
-      const data = await response.json()
-      setTimeSlots(data)
-    } catch (err) {
-      setError('Произошла ошибка при загрузке временных слотов')
+    if (!selectedTrainerId || !selectedDate) {
+      setTimeSlots([]);
+      return;
     }
-  }
+    try {
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      const response = await fetch(`${BASE_URL}/times?trainer_id=${selectedTrainerId}&date=${formattedDate}`);
+      if (!response.ok) throw new Error('Failed to fetch time slots');
+      const data = await response.json();
+      setTimeSlots(data);
+    } catch (err) {
+      setError('Произошла ошибка при загрузке временных слотов');
+    }
+  };
 
   const fetchTrainers = async () => {
     try {
@@ -144,11 +151,39 @@ export function BlockPage() {
     }
   }
 
+  useEffect(() => {
+    fetchTimeSlots();
+  }, [selectedTrainerId, selectedDate]);
+
   if (isLoading) return <div>Загрузка...</div>
   if (error) return <div>{error}</div>
 
   return (
     <div className="container mx-auto p-4">
+      <div className="mb-4">
+        <Label htmlFor="trainer">Выберите тренера</Label>
+        <Select onValueChange={(value) => setSelectedTrainerId(Number(value))}>
+          <SelectTrigger>
+            <SelectValue placeholder="Выберите тренера" />
+          </SelectTrigger>
+          <SelectContent>
+            {trainers.map((trainer) => (
+              <SelectItem key={trainer.id} value={trainer.id.toString()}>
+                {trainer.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="mb-4">
+        <Label htmlFor="date">Выберите дату</Label>
+        <Input
+          id="date"
+          type="date"
+          value={selectedDate.toISOString().split('T')[0]}
+          onChange={(e) => setSelectedDate(new Date(e.target.value))}
+        />
+      </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Управление временными слотами</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -188,7 +223,7 @@ export function BlockPage() {
             </DialogHeader>
             <TimeSlotForm
               initialData={editingTimeSlot}
-              onSubmit={(data) => updateTimeSlot({ ...data, timeslot_id: editingTimeSlot?.timeslot_id || 0 })}
+              onSubmit={(data) => updateTimeSlot({ ...data, timeslot_id: editingTimeSlot.timeslot_id })}
               trainers={trainers}
               services={services}
               groupClasses={groupClasses}
@@ -277,8 +312,8 @@ function TimeSlotForm({ initialData, onSubmit, trainers, services, groupClasses 
       <div className="flex items-center space-x-2">
         <Checkbox
           id="status"
-          checked={!!formData.status}
-          onCheckedChange={(checked) => setFormData({ ...formData, status: Boolean(checked) })}
+          checked={formData.status}
+          onCheckedChange={(checked) => setFormData({ ...formData, status: checked as boolean })}
         />
         <Label htmlFor="status">Доступно</Label>
       </div>
@@ -304,20 +339,20 @@ interface TimeSlotCardProps {
 }
 
 function TimeSlotCard({ timeSlot, onEdit, onDelete }: TimeSlotCardProps) {
+  const title = timeSlot.group_name || timeSlot.service_name || 'Не указано';
+  const isGroupClass = !!timeSlot.group_name;
+
   return (
-    <Card>
+    <Card className="mb-4">
       <CardHeader>
-        <CardTitle>{timeSlot.trainer_name}</CardTitle>
+        <CardTitle className="font-bold">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p>Дата: {timeSlot.date}</p>
         <p>Время: {timeSlot.time}</p>
-        <p>Услуга: {timeSlot.service_name}</p>
-        <p>Групповое занятие: {timeSlot.group_name}</p>
-        <p>Статус: {timeSlot.status ? 'Доступно' : 'Недоступно'}</p>
-        {timeSlot.available_spots !== null && (
+        {isGroupClass && (
           <p>Доступные места: {timeSlot.available_spots}</p>
         )}
+        <p>Статус: {timeSlot.status ? 'Доступно' : 'Недоступно'}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={onEdit}>Редактировать</Button>
