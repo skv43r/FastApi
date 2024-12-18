@@ -133,7 +133,7 @@ async def add_group_endpoin(session: SessionDep, group: GroupClass):
              raise e
     
 @router.delete("/api/admin/group/delete/{group_id}")
-async def delete__group_endpoint(session: SessionDep, group_id: int):
+async def delete_group_endpoint(session: SessionDep, group_id: int):
     try:
         group = session.get(GroupClass, group_id)
         if not group:
@@ -199,6 +199,55 @@ async def return_timeslots_endpoint(session: SessionDep, trainer_id: int = Query
         }
         for ts in time_slots
     ]
+
+@router.post("/api/admin/time/add")
+async def add_time_endpoin(session: SessionDep, time: TimeSlot):
+    try:
+        if not time.trainer_id or not time.dates or not time.times:
+                raise HTTPException(status_code=400,
+                                    detail="Поля тренер, дата и время являются обязательными")
+        existing_time = session.get(TimeSlot, time.id) if time.id else None
+        if existing_time:
+                raise HTTPException(status_code=400,
+                                    detail="Временной слот уже существует")
+        session.add(time)
+        session.commit()
+        session.refresh(time)
+    except Exception as e:
+             session.rollback()
+             raise e
+    
+@router.delete("/api/admin/time/delete/{time_id}")
+async def delete_time_endpoint(session: SessionDep, time_id: int):
+    try:
+        time = session.get(TimeSlot, time_id)
+        if not time:
+                    raise HTTPException(status_code=404,
+                                        detail="Временной слот не найден")
+        session.delete(time)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    
+@router.put("/api/admin/time/edit/{time_id}")
+async def edit_time_endpoint(session: SessionDep, time_id: int, time_data: TimeSlot):
+    try:
+        time = session.get(TimeSlot, time_id)
+        if not time:
+            raise HTTPException(status_code=404, detail="Временной слот не найден")
+        
+        time.trainer_id = time_data.trainer_id
+        time.service_id = time_data.service_id
+        time.group_class_id = time_data.group_class_id
+        time.dates = time_data.dates
+        time.times = time_data.times
+        time.available = time_data.available
+        time.available_spots = time_data.available_spots
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
 
 # @router.get("/api/trainers")
 # async def return_trainers_endpoint(session: SessionDep, group_class_id: int = None, service_id: int = Query(None, alias="serviceId")):
