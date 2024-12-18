@@ -111,7 +111,7 @@ export default function Times() {
 
   const addTimeSlot = async (timeSlot: Omit<TimeSlot, 'timeslot_id'>) => {
     try {
-      const response = await fetch(`${BASE_URL}/time-slots`, {
+      const response = await fetch(`${BASE_URL}/time/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(timeSlot),
@@ -127,7 +127,7 @@ export default function Times() {
 
   const updateTimeSlot = async (timeSlot: TimeSlot) => {
     try {
-      const response = await fetch(`${BASE_URL}/time-slots/${timeSlot.timeslot_id}`, {
+      const response = await fetch(`${BASE_URL}/time/edit/${timeSlot.timeslot_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(timeSlot),
@@ -143,7 +143,7 @@ export default function Times() {
 
   const deleteTimeSlot = async (id: number) => {
     try {
-      const response = await fetch(`${BASE_URL}/time-slots/${id}`, { method: 'DELETE' })
+      const response = await fetch(`${BASE_URL}/time/delete/${id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Failed to delete time slot')
       await fetchTimeSlots()
       alert('Временной слот успешно удален')
