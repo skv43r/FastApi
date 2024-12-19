@@ -111,12 +111,17 @@ export default function Times() {
 
   const addTimeSlot = async (timeSlot: Omit<TimeSlot, 'timeslot_id'>) => {
     try {
+      console.log('Отправляемый объект:', timeSlot);
       const response = await fetch(`${BASE_URL}/time/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(timeSlot),
       })
-      if (!response.ok) throw new Error('Failed to add time slot')
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Ошибка от сервера:', errorData);
+        throw new Error(errorData.detail || 'Failed to add time slot');
+      }  
       await fetchTimeSlots()
       setIsAddDialogOpen(false)
       alert('Новый временной слот успешно добавлен')
@@ -127,6 +132,7 @@ export default function Times() {
 
   const updateTimeSlot = async (timeSlot: TimeSlot) => {
     try {
+      console.log('Updating time slot with data:', timeSlot);
       const response = await fetch(`${BASE_URL}/time/edit/${timeSlot.timeslot_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -260,36 +266,90 @@ function TimeSlotForm({ initialData, onSubmit, trainers, services, groupClasses 
     onSubmit(formData)
   }
 
+  const handleServiceChange = (value: string) => {
+    setFormData({
+      ...formData,
+      service_name: value === 'none' ? '' : value,
+      group_name: '', // Clear group when service is selected
+    });
+  };
+
+  const handleGroupChange = (value: string) => {
+    setFormData({
+      ...formData,
+      group_name: value === 'none' ? '' : value,
+      service_name: '', // Clear service when group is selected
+    });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="trainer_name">Тренер</Label>
-        <Input
-          id="trainer_name"
-          type="text"
+        <Label htmlFor="trainer">Тренер</Label>
+        <Select
           value={formData.trainer_name}
-          onChange={(e) => setFormData({ ...formData, trainer_name: e.target.value })}
-          required
-        />
+          onValueChange={(value) => {
+            setFormData({
+              ...formData,
+              trainer_name: value,
+              service_name: '', // Clear service and group when trainer changes
+              group_name: '',
+            });
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Выберите тренера" />
+          </SelectTrigger>
+          <SelectContent>
+            {trainers.map((trainer) => (
+              <SelectItem key={trainer.id} value={trainer.name}>
+                {trainer.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
       <div>
-        <Label htmlFor="service_name">Услуга</Label>
-        <Input
-          id="service_name"
-          type="text"
-          value={formData.service_name}
-          onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
-        />
+        <Label htmlFor="service">Услуга</Label>
+        <Select
+          value={formData.service_name === '' ? 'none' : formData.service_name}
+          onValueChange={handleServiceChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Выберите услугу" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Нет услуги</SelectItem>
+            {services.map((service) => (
+              <SelectItem key={service.id} value={service.name}>
+                {service.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
       <div>
-        <Label htmlFor="group_name">Групповое занятие</Label>
-        <Input
-          id="group_name"
-          type="text"
-          value={formData.group_name}
-          onChange={(e) => setFormData({ ...formData, group_name: e.target.value })}
-        />
+        <Label htmlFor="group">Групповое занятие</Label>
+        <Select
+          value={formData.group_name === '' ? 'none' : formData.group_name}
+          onValueChange={handleGroupChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Выберите групповое занятие" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Нет группового занятия</SelectItem>
+            {groupClasses.map((groupClass) => (
+              <SelectItem key={groupClass.id} value={groupClass.name}>
+                {groupClass.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
       <div>
         <Label htmlFor="date">Дата</Label>
         <Input
@@ -300,6 +360,7 @@ function TimeSlotForm({ initialData, onSubmit, trainers, services, groupClasses 
           required
         />
       </div>
+
       <div>
         <Label htmlFor="time">Время</Label>
         <Input
@@ -310,6 +371,7 @@ function TimeSlotForm({ initialData, onSubmit, trainers, services, groupClasses 
           required
         />
       </div>
+
       <div className="flex items-center space-x-2">
         <Checkbox
           id="status"
@@ -318,6 +380,7 @@ function TimeSlotForm({ initialData, onSubmit, trainers, services, groupClasses 
         />
         <Label htmlFor="status">Доступно</Label>
       </div>
+
       <div>
         <Label htmlFor="available_spots">Доступные места</Label>
         <Input
@@ -328,9 +391,10 @@ function TimeSlotForm({ initialData, onSubmit, trainers, services, groupClasses 
           required
         />
       </div>
+
       <Button type="submit">Сохранить</Button>
     </form>
-  )
+  );
 }
 
 interface TimeSlotCardProps {
@@ -340,7 +404,7 @@ interface TimeSlotCardProps {
 }
 
 function TimeSlotCard({ timeSlot, onEdit, onDelete }: TimeSlotCardProps) {
-  const isGroupClass = timeSlot.group_name !== "Не указано";
+  const isGroupClass = timeSlot.group_name !== "none";
   console.log(timeSlot.group_name)
 
   return (
