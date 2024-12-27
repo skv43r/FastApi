@@ -81,9 +81,9 @@ async def post_booking_data_endpoint(session: SessionDep, booking_data: dict):
             class_id=booking_data["classId"],
             dates=booking_data["date"],
             timeslot_id=booking_data["timeSlotId"],
-            name=booking_data["name"],
-            phone=booking_data["phone"],
-            email=booking_data["email"]
+            user_name=booking_data["name"],
+            user_phone=booking_data["phone"],
+            user_email=booking_data["email"]
         )
 
     session.add(new_booking)
