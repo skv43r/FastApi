@@ -1,4 +1,4 @@
-from utils.models import *
+from utils.models import Trainer
 
 def test_get_trainers(test_client):
     response = test_client.get("/api/admin/trainers")
@@ -31,7 +31,7 @@ def test_add_trainer_without_parametrs(test_client):
     assert response.status_code == 400
     assert response.json() == {"detail": "Имя и Специализация обязательны"}
 
-def test_add_existing_trainer(test_client, test_session):
+def test_add_existing_trainer(test_client):
     existing_trainer = {
         "name": "Test Trainer 1",
         "specialization": "Yoga"
