@@ -50,11 +50,13 @@ services:
     depends_on:
        - postgres
     environment:
-      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+      DATABASE_URL: postgresql://postgres:Worldof123@postgres:5432/services
+      PYTHONPATH: /app:/app/utils
     networks:
       - dev
     volumes:
       - ./application/backend:/app
+      - ./utils:/app/utils
 
   frontend:
     build: 
@@ -93,11 +95,13 @@ services:
     depends_on:
        - postgres
     environment:
-      - DATABASE_URL=postgresql://postgres:Worldof123@postgres:5432/Users
+      DATABASE_URL: postgresql://postgres:Worldof123@postgres:5432/services
+      PYTHONPATH: /app:/app/utils
     networks:
       - dev
     volumes:
       - ./admin/backend:/app
+      - ./utils:/app/utils
 
   admin_frontend:
     build: 
