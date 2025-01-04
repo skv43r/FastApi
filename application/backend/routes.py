@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import Session, select
 from datetime import datetime
-from database import db
+from utils.database import db
 from typing import Annotated
-from models import Service, Trainer, TimeSlot, Booking, Branch, GroupClass
+from utils.models import Service, Trainer, TimeSlot, Booking, Branch, GroupClass
 
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
