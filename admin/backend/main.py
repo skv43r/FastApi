@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routes import router as rest_router
-from database import db
+from utils.database import db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
