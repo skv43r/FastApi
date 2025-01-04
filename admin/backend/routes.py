@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import Session, select
-from datetime import date, time, datetime
-from database import db 
+from datetime import datetime
+from utils.database import db 
 from typing import Annotated
 from pydantic import BaseModel
-from sqlalchemy.exc import SQLAlchemyError
-from models import Service, Trainer, TimeSlot, Booking, Branch, GroupClass, TrainerGroup
+from utils.models import Service, Trainer, TimeSlot, GroupClass
 
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
@@ -24,29 +23,37 @@ class TimeSlotRequest(BaseModel):
 async def get_trainers_endpoint(session: SessionDep):
     return session.exec(select(Trainer)).all()
 
+@router.get("/api/admin/trainer/{trainer_id}")
+async def get_trainer_endpoint(trainer_id: int, session: Session = Depends(db.get_session)):
+    trainer = session.get(Trainer, trainer_id)
+    if not trainer:
+        raise HTTPException(status_code=404, detail="Тренер не найден")
+    return trainer
+
 @router.post("/api/admin/trainer/add")
 async def add_trainer_endpoint(session: SessionDep, trainer: Trainer):
     try:
         if not trainer.name or not trainer.specialization:
                 raise HTTPException(status_code=400,
                                     detail="Имя и Специализация обязательны")
-        existing_trainer = session.get(Trainer, trainer.id) if trainer.id else None
+        existing_trainer = session.exec(select(Trainer).where(Trainer.name == trainer.name, Trainer.specialization == trainer.specialization)).first()
         if existing_trainer:
                 raise HTTPException(status_code=400,
                                     detail="Тренер уже существует")
         session.add(trainer)
         session.commit()
         session.refresh(trainer)
+        return {"trainer_id": trainer.id}
     except Exception as e:
              session.rollback()
              raise e
     
 @router.delete("/api/admin/trainer/delete/{trainer_id}")
-async def delete__trainer_endpoint(session: SessionDep, trainer_id: int):
+async def delete_trainer_endpoint(session: SessionDep, trainer_id: int):
     try:
         trainer = session.get(Trainer, trainer_id)
         if not trainer:
-                    raise HTTPException(status_code=404, detail="Тренер не найден")
+            raise HTTPException(status_code=404, detail="Тренер не найден")
         session.delete(trainer)
         session.commit()
     except Exception as e:
@@ -74,19 +81,27 @@ async def return_services_endpoint(session: SessionDep):
     services = session.exec(select(Service)).all()
     return services
 
+@router.get("/api/admin/service/{service_id}")
+async def get_service_endpoint(service_id: int, session: Session = Depends(db.get_session)):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Сервис не найден")
+    return service
+
 @router.post("/api/admin/service/add")
 async def add_service_endpoint(session: SessionDep, service: Service):
     try:
         if not service.name or not service.type:
                 raise HTTPException(status_code=400,
                                     detail="Название и тип обязательны")
-        existing_service = session.get(Service, service.id) if service.id else None
+        existing_service = session.exec(select(Service).where(Service.name == service.name, Service.type == service.type)).first()
         if existing_service:
                 raise HTTPException(status_code=400,
                                     detail="Сервис уже существует")
         session.add(service)
         session.commit()
         session.refresh(service)
+        return {"service_id": service.id}
     except Exception as e:
              session.rollback()
              raise e
@@ -96,7 +111,7 @@ async def delete_service_endpoint(session: SessionDep, service_id: int):
     try:
         service = session.get(Service, service_id)
         if not service:
-                    raise HTTPException(status_code=404, detail="Сервис не найден")
+            raise HTTPException(status_code=404, detail="Сервис не найден")
         session.delete(service)
         session.commit()
     except Exception as e:
@@ -114,6 +129,7 @@ async def edit_service_endpoint(session: SessionDep, service_id: int, service_da
         service.duration = service_data.duration
         service.description = service_data.description
         service.price = service_data.price
+        service.photo = service_data.photo
         service.type = service_data.type
         session.commit()
     except Exception as e:
@@ -125,19 +141,27 @@ async def return_groups_endpoint(session: SessionDep):
     groups = session.exec(select(GroupClass)).all()
     return groups
 
+@router.get("/api/admin/group/{group_id}")
+async def get_group_endpoint(group_id: int, session: Session = Depends(db.get_session)):
+    group = session.get(GroupClass, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Групповое занятие не найдено")
+    return group
+
 @router.post("/api/admin/group/add")
 async def add_group_endpoint(session: SessionDep, group: GroupClass):
     try:
         if not group.name:
                 raise HTTPException(status_code=400,
                                     detail="Название является обязательным")
-        existing_group = session.get(GroupClass, group.id) if group.id else None
+        existing_group = session.exec(select(GroupClass).where(GroupClass.name == group.name)).first()
         if existing_group:
                 raise HTTPException(status_code=400,
                                     detail="Групповое занятие уже существует")
         session.add(group)
         session.commit()
         session.refresh(group)
+        return {"group_id": group.id}
     except Exception as e:
              session.rollback()
              raise e
@@ -147,8 +171,7 @@ async def delete_group_endpoint(session: SessionDep, group_id: int):
     try:
         group = session.get(GroupClass, group_id)
         if not group:
-                    raise HTTPException(status_code=404,
-                                        detail="Групповое занятие не найдено")
+            raise HTTPException(status_code=404, detail="Групповое занятие не найдено")
         session.delete(group)
         session.commit()
     except Exception as e:
@@ -210,6 +233,13 @@ async def return_timeslots_endpoint(session: SessionDep, trainer_id: int = Query
         for ts in time_slots
     ]
 
+@router.get("/api/admin/time/{time_id}")
+async def get_time_endpoint(time_id: int, session: Session = Depends(db.get_session)):
+    time = session.get(TimeSlot, time_id)
+    if not time:
+        raise HTTPException(status_code=404, detail="Временной слот не найден")
+    return time
+
 @router.post("/api/admin/time/add")
 async def add_time_endpoint(session: SessionDep, time: TimeSlotRequest):
     try:
@@ -248,12 +278,9 @@ async def add_time_endpoint(session: SessionDep, time: TimeSlotRequest):
 
         return {"message": "Временной слот успешно добавлен", "time_slot": new_time_slot}
 
-    except SQLAlchemyError as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail="Ошибка базы данных")
     except Exception as e:
         session.rollback()
-        raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
+        raise e
     
 @router.delete("/api/admin/time/delete/{time_id}")
 async def delete_time_endpoint(session: SessionDep, time_id: int):
