@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from fastapi import status
-from sqlalchemy import select
 from utils.models import TimeSlot, Trainer, Service
 
 def test_get_timeslot(test_client, test_session):
