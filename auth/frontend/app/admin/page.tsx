@@ -25,7 +25,7 @@ export default function AdminBlockPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8001/api/auth/admin/register', {
+      const response = await fetch('http://localhost:8001/api/auth/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export default function AdminBlockPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8001/api/auth/admin/verify-otp', {
+      const response = await fetch('http://localhost:8001/api/auth/verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
