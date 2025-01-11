@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlmodel import Session, select
 from fastapi import HTTPException
 from models import AuthUser, TelegramOTP
-from utils import password_manager, token_service
+from utilits import password_manager, token_service
 from bot.main import otp_service
 
 logger = logging.getLogger(__name__)
@@ -67,4 +67,4 @@ class AuthService:
         
         user_otp.otp = None
         self.session.commit()
-        return token_service.create_access_token(data={"sub": user_otp.telegram_id}) 
+        return token_service.create_access_token(data={"sub": user_otp.telegram_id})
