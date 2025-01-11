@@ -4,8 +4,6 @@ from fastapi import HTTPException
 import jwt
 from jwt import ExpiredSignatureError, DecodeError
 
-
-
 class PasswordManager:
     def __init__(self, schemes: list = ["bcrypt"]) -> None:
         self.pwd_context = CryptContext(schemes=schemes, deprecated="auto")
