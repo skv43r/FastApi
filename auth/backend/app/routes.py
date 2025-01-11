@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from typing import Annotated
-from sqlmodel import Session
+from sqlmodel import Session, select
 from database import db
 from models import AuthUser, TelegramOTP
-from utils import token_service
+from utilits import token_service
 from auth_service import AuthService
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
@@ -59,4 +59,19 @@ async def verify_otp(data: TelegramOTP, session: SessionDep):
         access_token = auth_service.verify_otp(data.telegram_id, data.otp)
         return {"message": "OTP verified successfully", "access_token": access_token, "token_type": "bearer"}
     except HTTPException as e:
+        raise e
+
+@router.post("/api/auth/admin/login")
+async def admin(data: TelegramOTP, session: SessionDep):
+    try:
+        query = select(TelegramOTP).where(TelegramOTP.telegram_id == data.telegram_id, TelegramOTP.is_admin == True)
+        result = session.exec(query).one_or_none()
+        if not result:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied. User is not an administrator.")
+
+        auth_service = AuthService(session)
+        otp = await auth_service.send_otp(data.telegram_id, data.username)
+        return {"message": "OTP sent successfully", "otp": otp.otp}
+    except HTTPException as e:
+        session.rollback()
         raise e
