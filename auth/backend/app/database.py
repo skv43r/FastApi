@@ -13,4 +13,4 @@ class Database:
         with Session(self.engine) as session:
             yield session
 
-db = Database(database_url=settings.DATABASE_URL, echo=settings.ECHO_SQL)
+db = Database(database_url=settings.AUTH_BACKEND_DB_URL, echo=settings.ECHO_SQL)
