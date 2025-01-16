@@ -1,11 +1,34 @@
 'use client'
 
+import WebApp from '@twa-dev/sdk'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { User2, Users, Info, ChevronRight } from 'lucide-react'
+import { useEffect } from 'react'
+
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: {
+        ready: () => void
+        expand: () => void
+        close: () => void
+      }
+    }
+  }
+}
 
 export default function BlockPage() {
+  useEffect(() => {
+    if (window.Telegram) {
+        // Initialize the Web App
+        window.Telegram.WebApp.ready()
+        
+        // Expand the Web App to take up the full screen
+        window.Telegram.WebApp.expand()
+      }
+         }, [])
   const router = useRouter()
 
   return (
