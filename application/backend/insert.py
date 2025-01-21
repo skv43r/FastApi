@@ -501,29 +501,29 @@ end_date = datetime(2025, 1, 15)
 def insert_data():
     with next(db.get_session()) as session:
 
-        # for trainer in trainers_data:
-        #     trainer_entry = Trainer(**trainer)
-        #     session.add(trainer_entry)
+        for trainer in trainers_data:
+            trainer_entry = Trainer(**trainer)
+            session.add(trainer_entry)
 
-        # session.commit()
+        session.commit()
 
-        # for data in branch_data:
-        #     data_entry = Branch(**data)
-        #     session.add(data_entry)
+        for data in branch_data:
+            data_entry = Branch(**data)
+            session.add(data_entry)
 
-        # session.commit()
+        session.commit()
 
-        # for service in services_data:
-        #     service_entry = Service(**service)
-        #     session.add(service_entry)
+        for service in services_data:
+            service_entry = Service(**service)
+            session.add(service_entry)
 
-        # session.commit()
+        session.commit()
 
-        # for group in group_services_data:
-        #     group_entry = GroupClass(**group)
-        #     session.add(group_entry)
+        for group in group_services_data:
+            group_entry = GroupClass(**group)
+            session.add(group_entry)
 
-        # session.commit()
+        session.commit()
         
         services = session.exec(select(Service)).all()
         groups = session.exec(select(GroupClass)).all()
