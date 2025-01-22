@@ -530,71 +530,71 @@ def insert_data():
         trainer_service_pairs = session.exec(select(TrainerService)).all()
         trainer_group_pairs = session.exec(select(TrainerGroup)).all()
 
-        # for service in services:
-        #     if service.type.lower() == "massage":
-        #         trainer_service_entry = TrainerService(trainer_id=1, service_id=service.id)
-        #         session.add(trainer_service_entry)
-        #     else:
-        #         random_trainer = random.randint(2, 8)
-        #         trainer_service_entry = TrainerService(trainer_id=random_trainer, service_id=service.id)
-        #         session.add(trainer_service_entry)
+        for service in services:
+            if service.type.lower() == "massage":
+                trainer_service_entry = TrainerService(trainer_id=1, service_id=service.id)
+                session.add(trainer_service_entry)
+            else:
+                random_trainer = random.randint(2, 8)
+                trainer_service_entry = TrainerService(trainer_id=random_trainer, service_id=service.id)
+                session.add(trainer_service_entry)
         
-        # session.commit()
+        session.commit()
 
-        # for group in groups:
-        #         random_trainer = random.randint(2, 8)
-        #         trainer_group_entry = TrainerGroup(trainer_id=random_trainer, group_class_id=group.id)
-        #         session.add(trainer_group_entry)
+        for group in groups:
+                random_trainer = random.randint(2, 8)
+                trainer_group_entry = TrainerGroup(trainer_id=random_trainer, group_class_id=group.id)
+                session.add(trainer_group_entry)
 
-        # session.commit()
+        session.commit()
 
-        # for pair in trainer_service_pairs:
-        #     trainer_id = pair.trainer_id
-        #     service_id = pair.service_id
+        for pair in trainer_service_pairs:
+            trainer_id = pair.trainer_id
+            service_id = pair.service_id
 
-        #     current_date = start_date
-        #     while current_date <= end_date:
-        #         for slot_time in time_slots:
-        #             full_datetime = datetime.combine(current_date.date(), slot_time)
+            current_date = start_date
+            while current_date <= end_date:
+                for slot_time in time_slots:
+                    full_datetime = datetime.combine(current_date.date(), slot_time)
 
-        #             time_slot = TimeSlot(
-        #                 trainer_id=trainer_id,
-        #                 service_id=service_id,
-        #                 dates=current_date.date(),
-        #                 times=full_datetime.time(),
-        #                 available=True,
-        #                 created_at=datetime.utcnow()
-        #             )
-        #             session.add(time_slot)
+                    time_slot = TimeSlot(
+                        trainer_id=trainer_id,
+                        service_id=service_id,
+                        dates=current_date.date(),
+                        times=full_datetime.time(),
+                        available=True,
+                        created_at=datetime.utcnow()
+                    )
+                    session.add(time_slot)
 
-        #         current_date += timedelta(days=1)
+                current_date += timedelta(days=1)
 
-        #     session.commit()
+            session.commit()
 
-        # for pair in trainer_group_pairs:
-        #     trainer_id = pair.trainer_id
-        #     group_id = pair.group_class_id
+        for pair in trainer_group_pairs:
+            trainer_id = pair.trainer_id
+            group_id = pair.group_class_id
         
-        #     current_date = start_date
-        #     while current_date <= end_date:
-        #         for slot_time in time_slots:
-        #             full_datetime = datetime.combine(current_date.date(), slot_time)
+            current_date = start_date
+            while current_date <= end_date:
+                for slot_time in time_slots:
+                    full_datetime = datetime.combine(current_date.date(), slot_time)
 
-        #             time_slot = TimeSlot(
-        #                 trainer_id=trainer_id,
-        #                 group_class_id=group_id,
-        #                 dates=current_date.date(),
-        #                 times=full_datetime.time(),
-        #                 available=True,
-        #                 available_spots=random.randint(1, 10),
-        #                 created_at=datetime.utcnow()
-        #             )
+                    time_slot = TimeSlot(
+                        trainer_id=trainer_id,
+                        group_class_id=group_id,
+                        dates=current_date.date(),
+                        times=full_datetime.time(),
+                        available=True,
+                        available_spots=random.randint(1, 10),
+                        created_at=datetime.utcnow()
+                    )
 
-        #             session.add(time_slot)
+                    session.add(time_slot)
 
-        #         current_date += timedelta(days=1)
+                current_date += timedelta(days=1)
 
-        #     session.commit()
+            session.commit()
 
 if __name__ == "__main__":
     insert_data()
