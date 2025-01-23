@@ -495,8 +495,8 @@ branch_data = [
 ]
 
 time_slots = [time(hour, minute) for hour in range(16, 17) for minute in (0, 30)]
-start_date = datetime(2025, 1, 4)
-end_date = datetime(2025, 1, 15)
+start_date = datetime(2025, 1, 23)
+end_date = datetime(2025, 2, 23)
 
 def insert_data():
     with next(db.get_session()) as session:
